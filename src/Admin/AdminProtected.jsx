@@ -11,6 +11,7 @@ const AdminProtected = ({ children }) => {
         justifyContent: "center", 
         alignItems: "center", 
         height: "100vh",
+        
         background: "#f7efe5"
       }}>
         <div className="spinner-lg"></div>

@@ -14,26 +14,32 @@ let failedQueue = [];
 export const initAuth = () => {
   const token = localStorage.getItem("token");
   if (token) {
+
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   }
+
   return Promise.resolve(token);
 };
 
 api.interceptors.request.use(async (config) => {
+  
   await initAuth();
   if (config.data instanceof FormData) {
+  
     delete config.headers["Content-Type"];
   }
   return config;
 });
 
 api.interceptors.response.use(
+  
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     
     if (error.response?.status === 401 && !originalRequest._retry && 
         !originalRequest.url?.includes("/auth/refresh") && 
+        
         !originalRequest.url?.includes("/auth/login")) {
       
       if (isRefreshing) {
