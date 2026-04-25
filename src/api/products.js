@@ -10,7 +10,6 @@ export const productService = {
     const res = await api.get(`/products/${id}`);
     return { data: res.data };
   },
-
   searchProducts: async (query) => {
     const res = await api.get("/products/search", { params: { q: query } });
     return { data: res.data?.data || [] };

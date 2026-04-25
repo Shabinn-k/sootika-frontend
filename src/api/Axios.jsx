@@ -22,24 +22,21 @@ export const initAuth = () => {
 };
 
 api.interceptors.request.use(async (config) => {
-  
   await initAuth();
   if (config.data instanceof FormData) {
-  
     delete config.headers["Content-Type"];
   }
   return config;
 });
 
 api.interceptors.response.use(
-  
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     
     if (error.response?.status === 401 && !originalRequest._retry && 
         !originalRequest.url?.includes("/auth/refresh") && 
-        
+
         !originalRequest.url?.includes("/auth/login")) {
       
       if (isRefreshing) {
@@ -54,7 +51,6 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
       const refreshToken = localStorage.getItem("refresh_token");
-
       if (!refreshToken) {
         localStorage.clear();
         window.dispatchEvent(new CustomEvent("unauthorized"));
