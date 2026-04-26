@@ -1,6 +1,4 @@
-/* AddressModal.css - Add these styles */
 
-/* Close button */
 .modal-close-btn {
   position: absolute;
   top: 15px;
@@ -16,7 +14,6 @@
   color: #6d4c2f;
 }
 
-/* Error styling */
 input.error, 
 textarea.error {
   border-color: #c62828 !important;
@@ -30,7 +27,6 @@ textarea.error {
   display: block;
 }
 
-/* Checkbox label */
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -38,8 +34,6 @@ textarea.error {
   margin: 12px 0;
   cursor: pointer;
 }
-
-/* Modal buttons */
 .modal-buttons {
   display: flex;
   gap: 12px;
@@ -71,12 +65,10 @@ textarea.error {
   background: #ddd;
   cursor: not-allowed;
 }
-
-/* Modal position relative for close button */
+ 
 .address-modal {
   position: relative;
-}
-/* Loading state */
+} 
 .banner-loader {
   position: absolute;
   inset: 0;
@@ -100,8 +92,7 @@ textarea.error {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
-/* Navigation dots */
+ 
 .banner-dots {
   position: absolute;
   bottom: 20px;
@@ -133,8 +124,7 @@ textarea.error {
   background: #c9a47a;
   transform: scale(1.2);
 }
-
-/* Arrow buttons */
+ 
 .banner-arrow {
   position: absolute;
   top: 50%;

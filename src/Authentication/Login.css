@@ -12,7 +12,6 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
-
 /* Main container */
 .login-popup-container {
   width: 380px;
