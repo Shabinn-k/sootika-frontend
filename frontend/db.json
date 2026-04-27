@@ -65,6 +65,34 @@
             "pincode": "aa",
             "isDefault": true
           }
+        },
+        {
+          "orderId": 518,
+          "date": "05/01/2026",
+          "items": [
+            {
+              "id": "12",
+              "title": "TRENDY ETHNIC WEAR",
+              "name": "ethnic | modern | vibrant",
+              "description": "A lovely blend of ethnic charm and modern minimalism, ideal for festive and casual moments.",
+              "image": "/products/shop5.webp",
+              "sImage": "/products/shop5_1.webp",
+              "price": 1199,
+              "stock": true,
+              "quantity": 1
+            }
+          ],
+          "total": 1299,
+          "paymentMethod": "cod",
+          "track": "Pending",
+          "shippingAddress": {
+            "id": 1766571777684,
+            "address": "aa",
+            "city": "aa",
+            "state": "aa",
+            "pincode": "aa",
+            "isDefault": true
+          }
         }
       ],
       "acc": "active",
@@ -99,66 +127,7 @@
           "isDefault": true
         }
       ],
-      "orders": [
-        {
-          "orderId": 213,
-          "date": "24/12/2025",
-          "items": [
-            {
-              "id": "2",
-              "title": "SWEATER",
-              "name": "blue | fugi | quis",
-              "description": "A cozy blue sweater with soft texture and a comfortable fit, ideal for cool days.",
-              "image": "/products/blue.webp",
-              "sImage": "/products/brwn.webp",
-              "tImage": "/products/majandha.webp",
-              "price": 1599,
-              "stock": true,
-              "quantity": 1
-            }
-          ],
-          "total": 1699,
-          "paymentMethod": "cod",
-          "track": "Pending",
-          "shippingAddress": {
-            "id": 1766572842292,
-            "address": "sss",
-            "city": "s",
-            "state": "sss",
-            "pincode": "ss",
-            "isDefault": true
-          }
-        },
-        {
-          "orderId": 780,
-          "date": "24/12/2025",
-          "items": [
-            {
-              "id": "2",
-              "title": "SWEATER",
-              "name": "blue | fugi | quis",
-              "description": "A cozy blue sweater with soft texture and a comfortable fit, ideal for cool days.",
-              "image": "/products/blue.webp",
-              "sImage": "/products/brwn.webp",
-              "tImage": "/products/majandha.webp",
-              "price": 1599,
-              "stock": true,
-              "quantity": 1
-            }
-          ],
-          "total": 1679,
-          "paymentMethod": "card",
-          "track": "Pending",
-          "shippingAddress": {
-            "id": 1766572842292,
-            "address": "sss",
-            "city": "s",
-            "state": "sss",
-            "pincode": "ss",
-            "isDefault": true
-          }
-        }
-      ]
+      "orders": []
     }
   ],
   "products": [
@@ -413,8 +382,19 @@
       "image": "/products/jean.webp",
       "sImage": "",
       "tImage": "",
-      "price": "1999",
-      "stock": false
+      "price": 1999,
+      "stock": true
+    },
+    {
+      "id": "84fe",
+      "title": "hh",
+      "name": "hh",
+      "description": "hh",
+      "image": "jjj",
+      "sImage": "hhh",
+      "tImage": "",
+      "price": 1,
+      "stock": true
     }
   ],
   "feedbacks": [
