@@ -20,9 +20,7 @@
   background: #fff8ec;
   animation: popupShow 0.3s ease-out;
   box-shadow: 0 0 35px rgba(160, 130, 90, 0.35);
-}
-
-/* Animation */
+} 
 @keyframes popupShow {
   from {
     transform: scale(0.9);
@@ -32,9 +30,7 @@
     transform: scale(1);
     opacity: 1;
   }
-}
-
-/* Title bar */
+} 
 .login-poup-title {
   display: flex;
   justify-content: space-between;
@@ -48,8 +44,7 @@
   font-size: 28px;
   font-weight: 700;
 }
-
-/* Close button with animation */
+ 
 .close-btn {
   cursor: pointer;
   color: #a3845f;
@@ -63,8 +58,7 @@
   background: rgba(0, 0, 0, 0.07);
   transform: rotate(90deg);
 }
-
-/* Inputs */
+ 
 .login-popup-inputs {
   display: flex;
   flex-direction: column;
@@ -87,8 +81,7 @@
   background: #fff;
   border-color: #b79b74;
 }
-
-/* Error message */
+ 
 .error-message {
   background: #fdecea;
   color: #c62828;
@@ -99,8 +92,7 @@
   margin-bottom: 15px;
   border: 1px solid #ffcdd2;
 }
-
-/* Submit button */
+ 
 .login-popup-container button {
   width: 100%;
   padding: 12px;
@@ -123,8 +115,7 @@
   cursor: not-allowed;
   opacity: 0.7;
 }
-
-/* Checkbox + text - FIXED POSITION */
+ 
 .login-popup-condition {
   display: flex;
   align-items: center;
