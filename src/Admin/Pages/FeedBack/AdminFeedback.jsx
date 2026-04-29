@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../api/Axios";
+import { adminService } from "../../../api/admin";
+import { toast } from "react-toastify";
 import Layout from "../../Components/Layout";
 import "./AdminFeedback.css";
 
@@ -13,8 +14,8 @@ const AdminFeedback = () => {
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
-        const res = await api.get("/feedbacks");
-        setFeedbacks(res.data);
+        const res = await adminService.getFeedbacks();
+        setFeedbacks(res.data.data || res.data || []);
       } catch (error) {
         console.error("Failed to fetch feedbacks", error);
       } finally {
@@ -30,15 +31,17 @@ const AdminFeedback = () => {
   ===================== */
   const approve = async (id) => {
     try {
-      await api.patch(`/feedbacks/${id}`, { feed: "approved" });
+      await adminService.approveFeedback(id);
 
       setFeedbacks((prev) =>
         prev.map((item) =>
-          item.id === id ? { ...item, feed: "approved" } : item
+          item.ID === id ? { ...item, feed: "approved" } : item
         )
       );
+      toast.success("Feedback approved");
     } catch (error) {
       console.error("Approve failed", error);
+      toast.error("Failed to approve feedback");
     }
   };
 
@@ -50,10 +53,12 @@ const AdminFeedback = () => {
     if (!sure) return;
 
     try {
-      await api.delete(`/feedbacks/${id}`);
-      setFeedbacks((prev) => prev.filter((item) => item.id !== id));
+      await adminService.deleteFeedback(id);
+      setFeedbacks((prev) => prev.filter((item) => item.ID !== id));
+      toast.success("Feedback deleted");
     } catch (error) {
       console.error("Delete failed", error);
+      toast.error("Failed to delete feedback");
     }
   };
 
@@ -79,14 +84,14 @@ const AdminFeedback = () => {
 
             <tbody>
               {feedbacks.map((item) => (
-                <tr key={item.id}>
+                <tr key={item.ID}>
                   <td>{item.name}</td>
                   <td>{item.review}</td>
-                  <td>{item.rating} ★</td>
+                  <td>{"★".repeat(item.rating)}{"☆".repeat(5-item.rating)}</td>
                   <td>
                     <button
                       className="ys-btn"
-                      onClick={() => approve(item.id)}
+                      onClick={() => approve(item.ID)}
                       disabled={item.feed === "approved"}
                     >
                       {item.feed === "approved" ? "Approved" : "Approve"}
@@ -94,7 +99,7 @@ const AdminFeedback = () => {
 
                     <button
                       className="dlt-btn"
-                      onClick={() => deleteFeed(item.id)}
+                      onClick={() => deleteFeed(item.ID)}
                     >
                       Delete
                     </button>

@@ -1,37 +1,55 @@
-import "./Shop.css";
+// pages/shop/Shop.jsx
 import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { products } from "../../../db.json";
+import { productService } from "../../api/products";
 import { toast } from "react-toastify";
 import { useAuth } from "../../Authentication/AuthContext";
 import { CartContext } from "../../context/CartContext";
 import { FaHeart } from "react-icons/fa";
+import "./Shop.css";
 
 const Shop = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [shop, setShop] = useState(products);
-
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
   const { user } = useAuth();
   const { addToCart, addToWish } = useContext(CartContext);
 
-  // 🔍 Search filter
+  // Fetch products from API
   useEffect(() => {
-    const filtered = products.filter((item) =>
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.name.toLowerCase().includes(search.toLowerCase())
-    );
-    setShop(filtered);
-  }, [search]);
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await productService.getAllProducts();
+        // Handle the response structure from your backend
+        // Backend returns: { data: products, count }
+        setProducts(response.data || []);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+        toast.error("Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // 🛒 Add to cart
+    fetchProducts();
+  }, []);
+
+  // Filter products based on search
+  const filteredProducts = products.filter((item) =>
+    item.title?.toLowerCase().includes(search.toLowerCase()) ||
+    item.name?.toLowerCase().includes(search.toLowerCase())
+  );
+
   const handleAddToCart = (product) => {
     if (!user) {
       toast.warn("Please login to add items to Cart!");
       return;
     }
 
-    if (product.stock === false) {
+    if (product.stock === false || product.in_stock === false) {
       toast.error("Product is out of stock!");
       return;
     }
@@ -40,7 +58,6 @@ const Shop = () => {
     toast.success("Added to cart");
   };
 
-  // ❤️ Add to wishlist
   const handleAddToWish = (product) => {
     if (!user) {
       toast.warn("Please login to add items to Wishlist!");
@@ -48,6 +65,17 @@ const Shop = () => {
     }
     addToWish(product);
   };
+
+  if (loading) {
+    return (
+      <div className="shop-page">
+        <div className="back-home" onClick={() => navigate("/")}>
+          ← Back to Home
+        </div>
+        <div className="loading-spinner">Loading products...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="shop-page">
@@ -60,11 +88,12 @@ const Shop = () => {
         placeholder="Search products..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        className="search-input"
       />
 
       <div className="product-grid">
-        {shop.length > 0 ? (
-          shop.map((item) => (
+        {filteredProducts.length > 0 ? (
+          filteredProducts.map((item) => (
             <div className="product-card" key={item.id}>
               <div className="image-box">
                 <FaHeart
@@ -72,7 +101,7 @@ const Shop = () => {
                   onClick={() => user && handleAddToWish(item)}
                 />
                 <img
-                  src={item.image}
+                  src={item.main_image || item.image}
                   alt={item.title}
                   onClick={() => navigate(`/detail/${item.id}`)}
                 />
@@ -84,18 +113,18 @@ const Shop = () => {
 
               <h2 className="name">{item.name}</h2>
 
-              <p className={`stock ${item.stock === false ? "out" : ""}`}>
-                {item.stock ? "In Stock" : "Out of Stock"}
+              <p className={`stock ${(item.stock === false || item.in_stock === false) ? "out" : ""}`}>
+                {(item.stock > 0 || item.in_stock === true) ? "In Stock" : "Out of Stock"}
               </p>
 
               <span className="price">₹ {item.price}</span>
 
               <button
                 className="addCart"
-                disabled={!item.stock}
+                disabled={item.stock === 0 || item.in_stock === false}
                 onClick={() => handleAddToCart(item)}
               >
-                {item.stock ? "Add to Cart" : "Out of Stock"}
+                {item.stock > 0 ? "Add to Cart" : "Out of Stock"}
               </button>
             </div>
           ))

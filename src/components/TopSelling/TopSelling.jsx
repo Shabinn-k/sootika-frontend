@@ -1,5 +1,6 @@
+// components/TopSelling/TopSelling.jsx
 import React, { useState, useEffect, useContext } from 'react';
-import { api } from '../../api/Axios';
+import { productService } from '../../api/products';
 import "./TopSelling.css";
 import { FaShoppingCart, FaHeart } from "react-icons/fa";
 import { CartContext } from '../../context/CartContext';
@@ -8,15 +9,22 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 const TopSelling = ({ setShowLogin }) => {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
     const { user } = useAuth();
-    const [prod, setProd] = useState([]);
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
     const { addToCart, addToWish } = useContext(CartContext);
 
     useEffect(() => {
-        api.get("/products")
-            .then(res => setProd(res.data))
-            .catch(err => console.log(err));
+        productService.getAllProducts()
+            .then(res => {
+                setProducts(res.data || []);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.log("Failed to load products:", err);
+                setLoading(false);
+            });
     }, []);
 
     const handleCart = () => {
@@ -37,16 +45,24 @@ const TopSelling = ({ setShowLogin }) => {
         return true;
     };
 
+    if (loading) {
+        return <div className="loading">Loading products...</div>;
+    }
+
     return (
         <div>
             <br />
             <h1>Our New Collections :-</h1>
 
             <div className="group-1">
-                {prod.slice(0, 4).map((item) => (
+                {products.slice(0, 4).map((item) => (
                     <div key={item.id} className="card">
                         <div className="card-img-box">
-                            <img src={item.image} alt={item.title} onClick={() => navigate(`/detail/${item.id}`)} />
+                            <img 
+                                src={item.main_image || item.image} 
+                                alt={item.title} 
+                                onClick={() => navigate(`/detail/${item.id}`)} 
+                            />
                         </div>
                         <h3>{item.title}</h3>
                         <div className="card-icons">
@@ -56,17 +72,20 @@ const TopSelling = ({ setShowLogin }) => {
                                 onClick={() => { if (handleCart()) addToCart(item); }} />
                         </div>
                         <h2>{item.name}</h2>
-                        <p>{item.catogory}</p>
                         <span>₹ {item.price}</span>
                     </div>
                 ))}
             </div>
 
             <div className="group-2">
-                {prod.slice(4, 8).map((item) => (
+                {products.slice(4, 8).map((item) => (
                     <div key={item.id} className="card">
                         <div className="card-img-box">
-                            <img src={item.image} alt={item.title} onClick={() => navigate(`/detail/${item.id}`)} />
+                            <img 
+                                src={item.main_image || item.image} 
+                                alt={item.title} 
+                                onClick={() => navigate(`/detail/${item.id}`)} 
+                            />
                         </div>
                         <h3>{item.title}</h3>
                         <div className="card-icons">

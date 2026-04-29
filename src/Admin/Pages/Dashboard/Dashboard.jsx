@@ -1,33 +1,26 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../Components/Layout";
-import { api } from "../../../api/Axios";
+import { adminService } from "../../../api/admin";
 import "./Dashboard.css";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  const [products, setProducts] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [feedbacks, setFeedbacks] = useState([]);
+  const [stats, setStats] = useState({
+    total_products: 0,
+    total_users: 0,
+    pending_feedback: 0,
+    total_revenue: 0,
+    recent_users: []
+  });
 
   const fetchDashboardData = async () => {
     try {
-      const productRes = await api.get("/products");
-      const userRes = await api.get("/users");
-      const feedbackRes = await api.get("/feedbacks");
-
-      setProducts(productRes.data || []);
-      setUsers(userRes.data || []);
-      setFeedbacks(feedbackRes.data || []);
-
-      // Collect all orders from users safely
-      const allOrders = (userRes.data || []).flatMap(
-        (user) => user.orders || []
-      );
-
-      setOrders(allOrders);
+      const res = await adminService.getDashboard();
+      if (res.data && res.data.stats) {
+        setStats(res.data.stats);
+      }
     } catch (error) {
       console.error("Dashboard fetch error:", error);
     }
@@ -36,26 +29,6 @@ const Dashboard = () => {
   useEffect(() => {
     fetchDashboardData();
   }, []);
-
-  /* =====================
-     CALCULATIONS
-  ===================== */
-  const totalProducts = products.length;
-  const totalUsers = users.length;
-  const totalOrders = orders.length;
-
-  const totalRevenue = orders.reduce(
-    (sum, order) => sum + Number(order.total || 0),
-    0
-  );
-
-  const pendingOrders = orders.filter(
-    (order) => order.track === "Pending"
-  ).length;
-
-  const pendingFeedback = feedbacks.filter(
-    (f) => f.feed === "pending"
-  ).length;
 
   /* =====================
      NAVIGATION
@@ -71,22 +44,22 @@ const Dashboard = () => {
         <div className="dash-cards">
 
           <div className="dash-card" onClick={() => goTo("/admin/products")}>
-            <h2>{totalProducts}</h2>
+            <h2>{stats.total_products || 0}</h2>
             <p>Total Products</p>
           </div>
 
           <div className="dash-card" onClick={() => goTo("/admin/users")}>
-            <h2>{totalUsers}</h2>
+            <h2>{stats.total_users || 0}</h2>
             <p>Total Users</p>
           </div>
 
           <div className="dash-card" onClick={() => goTo("/admin/orders")}>
-            <h2>{totalOrders}</h2>
+            <h2>0</h2> {/* Orders not implemented yet in backend */}
             <p>Total Orders</p>
           </div>
 
           <div className="dash-card">
-            <h2>₹ {totalRevenue.toLocaleString()}</h2>
+            <h2>₹ {(stats.total_revenue || 0).toLocaleString()}</h2>
             <p>Total Revenue</p>
           </div>
 
@@ -94,7 +67,7 @@ const Dashboard = () => {
             className="dash-card warning"
             onClick={() => goTo("/admin/orders")}
           >
-            <h2>{pendingOrders}</h2>
+            <h2>0</h2> {/* Orders not implemented yet in backend */}
             <p>Pending Orders</p>
           </div>
 
@@ -102,26 +75,24 @@ const Dashboard = () => {
             className="dash-card warning"
             onClick={() => goTo("/admin/feedback")}
           >
-            <h2>{pendingFeedback}</h2>
+            <h2>{stats.pending_feedback || 0}</h2>
             <p>Pending Feedback</p>
           </div>
 
         </div>
 
-        {/* RECENT ORDERS */}
-        <h2 className="recent-title">Recent Orders</h2>
+        {/* RECENT USERS */}
+        <h2 className="recent-title">Recent Users</h2>
 
         <div
           className="recent-orders"
-          onClick={() => goTo("/admin/orders")}
+          onClick={() => goTo("/admin/users")}
         >
-          {[...orders]
-            .reverse()
-            .slice(0, 5)
-            .map((order, index) => (
+          {(stats.recent_users || []).map((user, index) => (
               <div className="recent-item" key={index}>
-                <p><b>Order ID:</b> #{order.orderId}</p>
-                <p><b>Status:</b> {order.track}</p>
+                <p><b>Name:</b> {user.name}</p>
+                <p><b>Email:</b> {user.email}</p>
+                <p><b>Role:</b> {user.role}</p>
               </div>
             ))}
         </div>

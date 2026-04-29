@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../Components/Layout";
-import { api } from "../../../api/Axios";
+import { adminService } from "../../../api/admin";
+import { toast } from "react-toastify";
 import "./UserDetail.css";
 
 const UserDetail = () => {
@@ -12,31 +13,55 @@ const UserDetail = () => {
      FETCH USERS
   ===================== */
   useEffect(() => {
-    api
-      .get("/users")
-      .then((res) => setUsers(res.data))
-      .catch((err) => console.log(err));
+    const fetchUsers = async () => {
+      try {
+        const res = await adminService.getAllUsers();
+        setUsers(res.data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch users", err);
+      }
+    };
+    fetchUsers();
   }, []);
 
   /* =====================
      BLOCK / UNBLOCK USER
   ===================== */
   const handleBlock = async (user) => {
-    const acc = user.acc === "blocked" ? "active" : "blocked";
-
-    if (!window.confirm("Are you sure?")) return;
+    if (!window.confirm(`Are you sure you want to ${user.is_blocked ? "unblock" : "block"} this user?`)) return;
 
     try {
-      await api.patch(`/users/${user.id}`, { acc });
-
+      const res = await adminService.toggleUserBlock(user.ID);
+      
       setUsers((prev) =>
         prev.map((u) =>
-          u.id === user.id ? { ...u, acc } : u
+          u.ID === user.ID ? { ...u, is_blocked: res.data.is_blocked } : u
         )
       );
+      toast.success(res.data.message);
     } catch (err) {
       console.error(err);
-      alert("Failed to update user status");
+      toast.error("Failed to update user status");
+    }
+  };
+
+  /* =====================
+     UPDATE ROLE
+  ===================== */
+  const handleRoleUpdate = async (user, newRole) => {
+    if (!window.confirm(`Change role to ${newRole}?`)) return;
+
+    try {
+      await adminService.updateUserRole(user.ID, { role: newRole });
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.ID === user.ID ? { ...u, role: newRole } : u
+        )
+      );
+      toast.success("Role updated successfully");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update role");
     }
   };
 
@@ -44,7 +69,7 @@ const UserDetail = () => {
      FILTER USERS
   ===================== */
   const displayUsers = users.filter((user) => {
-    if (showBlocked && user.acc !== "blocked") return false;
+    if (showBlocked && !user.is_blocked) return false;
     if (
       search &&
       !user.name?.toLowerCase().includes(search.toLowerCase())
@@ -53,9 +78,7 @@ const UserDetail = () => {
     return true;
   });
 
-  const blockedCount = users.filter(
-    (u) => u.acc === "blocked"
-  ).length;
+  const blockedCount = users.filter((u) => u.is_blocked).length;
 
   return (
     <Layout>
@@ -80,7 +103,7 @@ const UserDetail = () => {
               <th>Profile</th>
               <th>Name</th>
               <th>Email</th>
-              <th>Password</th>
+              <th>Role</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
@@ -88,7 +111,7 @@ const UserDetail = () => {
 
           <tbody>
             {displayUsers.map((user) => (
-              <tr key={user.id}>
+              <tr key={user.ID}>
                 <td>
                   <div className="avatar">
                     {user.name?.[0]?.toUpperCase() || "U"}
@@ -97,15 +120,22 @@ const UserDetail = () => {
 
                 <td>{user.name}</td>
                 <td>{user.email}</td>
+                
+                <td>
+                  <select 
+                    value={user.role} 
+                    onChange={(e) => handleRoleUpdate(user, e.target.value)}
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </td>
 
-                {/* 🔒 NEVER SHOW PASSWORD */}
-                <td>{user.password}</td>
-
-                <td>{user.acc || "active"}</td>
+                <td>{user.is_blocked ? "Blocked" : "Active"}</td>
 
                 <td>
                   <button onClick={() => handleBlock(user)}>
-                    {user.acc === "blocked" ? "Unblock" : "Block"}
+                    {user.is_blocked ? "Unblock" : "Block"}
                   </button>
                 </td>
               </tr>
