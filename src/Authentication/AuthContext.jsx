@@ -5,24 +5,89 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [admin, setAdmin] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+    if (token && storedUser) {
+      try {
+        return JSON.parse(storedUser);
+      } catch (e) {
+        console.error("Failed to parse stored user", e);
+        localStorage.removeItem("user");
+      }
+    }
+    return null;
+  });
+  
+  const [admin, setAdmin] = useState(() => {
+    const token = localStorage.getItem("token");
+    const storedAdmin = localStorage.getItem("admin");
+    if (token && storedAdmin) {
+      try {
+        return JSON.parse(storedAdmin);
+      } catch (e) {
+        console.error("Failed to parse stored admin", e);
+        localStorage.removeItem("admin");
+      }
+    }
+    return null;
+  });
+  
+  const [loading, setLoading] = useState(true); // Start as true
   const navigate = useNavigate();
 
+  // Validate token on app load
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const storedAdmin = localStorage.getItem("admin");
-    const token = localStorage.getItem("token");
+    const validateToken = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-    if (token) {
-      if (storedUser) setUser(JSON.parse(storedUser));
-      if (storedAdmin) setAdmin(JSON.parse(storedAdmin));
-    }
-    setLoading(false);
+      try {
+        // Try to get user info with current token
+        const response = await api.get("/user/dashboard", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const userData = response.data;
+        const role = userData.role || localStorage.getItem("role");
+        
+        if (role === "admin") {
+          const adminData = {
+            id: userData.admin_id || userData.user_id,
+            name: userData.name || "Admin",
+            role: "admin"
+          };
+          setAdmin(adminData);
+          localStorage.setItem("admin", JSON.stringify(adminData));
+        } else {
+          const userInfo = {
+            id: userData.user_id,
+            name: userData.name,
+            role: "user"
+          };
+          setUser(userInfo);
+          localStorage.setItem("user", JSON.stringify(userInfo));
+        }
+      } catch (error) {
+        console.error("Token validation failed:", error);
+        // Token invalid, clear storage
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("admin");
+        localStorage.removeItem("refresh_token");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    validateToken();
   }, []);
 
   useEffect(() => {
@@ -34,26 +99,29 @@ export const AuthProvider = ({ children }) => {
 
     window.addEventListener("unauthorized", handleUnauthorized);
     return () => window.removeEventListener("unauthorized", handleUnauthorized);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (email, password) => {
     try {
-      const res = await api.post("/auth/login", { email, password });
+      console.log("Attempting login for:", email);
       
-      // Backend response: { access_token, refresh_token, role }
+      const res = await api.post("/auth/login", { email, password });
+      console.log("Login response:", res.data);
+      
       const { access_token, refresh_token, role } = res.data;
+      
+      if (!access_token) {
+        throw new Error("No access token received");
+      }
       
       localStorage.setItem("token", access_token);
       localStorage.setItem("refresh_token", refresh_token);
+      localStorage.setItem("role", role);
       
-      // Get user details
-      const userRes = await api.get("/user/dashboard", {
-        headers: { Authorization: `Bearer ${access_token}` }
-      });
-      
+      // Create basic user data from login response
       const userData = {
-        id: userRes.data.user_id,
-        name: userRes.data.name,
+        id: email, // Temporary, will be updated from dashboard
         email: email,
         role: role
       };
@@ -72,16 +140,27 @@ export const AuthProvider = ({ children }) => {
         navigate("/");
       }
       return true;
+      
     } catch (err) {
-      console.error("Login error:", err);
-      toast.error(err.response?.data?.error || "Login failed!");
+      console.error("Login error details:", err.response?.data || err.message);
+      
+      let errorMessage = "Login failed. Please try again.";
+      if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.response?.status === 401) {
+        errorMessage = "Invalid email or password";
+      } else if (err.code === "ERR_NETWORK") {
+        errorMessage = "Cannot connect to server. Please check if backend is running.";
+      }
+      
+      toast.error(errorMessage);
       return false;
     }
   };
 
   const signup = async (userData) => {
     try {
-      const res = await api.post("/auth/signup", {
+      await api.post("/auth/signup", {
         name: userData.name,
         email: userData.email,
         phone: userData.number,
@@ -89,12 +168,19 @@ export const AuthProvider = ({ children }) => {
       });
       
       toast.success("Signup successful! Please check your email for OTP.");
-      navigate("/");
-      return true;
+      return { success: true, email: userData.email };
     } catch (err) {
-      console.error("Signup error:", err);
-      toast.error(err.response?.data?.error || "Signup failed!");
-      return false;
+      console.error("Signup error:", err.response?.data || err.message);
+      
+      let errorMessage = "Signup failed!";
+      if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.response?.status === 409) {
+        errorMessage = "Email already exists. Please use a different email.";
+      }
+      
+      toast.error(errorMessage);
+      return { success: false };
     }
   };
 
@@ -113,13 +199,31 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("admin");
       localStorage.removeItem("token");
       localStorage.removeItem("refresh_token");
+      localStorage.removeItem("role");
       navigate("/");
+      toast.info("Logged out successfully");
     }
   };
 
   const logoutAdmin = logoutUser;
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        background: '#f7efe5',
+        color: '#5a4634'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="loading-spinner"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider

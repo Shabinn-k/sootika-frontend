@@ -43,6 +43,7 @@ const Payment = () => {
   useEffect(() => {
     if (!user) return;
     const list = user.addresses || [];
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAddresses(list);
     setSelectedAddress(list.find(a => a.isDefault) || list[0] || null);
   }, [user]);

@@ -2,47 +2,69 @@ import React, { useState } from "react";
 import { api } from "../../../api/Axios";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../Components/Layout";
+import { toast } from "react-toastify";
 import "./AddProducts.css";
-
-const initialProduct = {
-  title: "",
-  name: "",
-  description: "",
-  image: "",
-  sImage: "",
-  tImage: "",
-  price: 0,
-  stock: true,
-};
 
 const AddProduct = () => {
   const navigate = useNavigate();
-  const [product, setProduct] = useState(initialProduct);
   const [loading, setLoading] = useState(false);
 
-  /* =====================
-     ADD PRODUCT
-  ===================== */
+  // Text fields state
+  const [title, setTitle] = useState("");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [stockQuantity, setStockQuantity] = useState(10);
+
+  // File objects state
+  const [mainImage, setMainImage] = useState(null);
+  const [secondImage, setSecondImage] = useState(null);
+  const [thirdImage, setThirdImage] = useState(null);
+
+  // File previews state
+  const [mainPreview, setMainPreview] = useState(null);
+  const [secondPreview, setSecondPreview] = useState(null);
+  const [thirdPreview, setThirdPreview] = useState(null);
+
+  const handleImageChange = (e, setImage, setPreview) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
   const addProduct = async () => {
     // Basic validation
-    if (
-      !product.title ||
-      !product.name ||
-      !product.image ||
-      product.price <= 0
-    ) {
-      alert("Please fill all required fields");
+    if (!title || !name || !mainImage || !price || Number(price) <= 0) {
+      toast.error("Please fill all required fields (Title, Name, Price, Main Image)");
       return;
     }
 
     try {
       setLoading(true);
-      await api.post("/products", product);
-      alert("Product added successfully");
+
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("name", name);
+      formData.append("description", description);
+      formData.append("price", price);
+      formData.append("stock", stockQuantity);
+      formData.append("main_image", mainImage);
+      if (secondImage) formData.append("second_image", secondImage);
+      if (thirdImage) formData.append("third_image", thirdImage);
+
+      await api.post("/admin/products", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast.success("Product added successfully");
       navigate("/admin/products");
     } catch (err) {
       console.error(err);
-      alert("Failed to add product");
+      toast.error(err.response?.data?.error || "Failed to add product");
     } finally {
       setLoading(false);
     }
@@ -56,20 +78,18 @@ const AddProduct = () => {
         <div className="form-group">
           <label>Product Title *</label>
           <input
-            value={product.title}
-            onChange={(e) =>
-              setProduct({ ...product, title: e.target.value })
-            }
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Beautiful Saree"
           />
         </div>
 
         <div className="form-group">
           <label>Product Name *</label>
           <input
-            value={product.name}
-            onChange={(e) =>
-              setProduct({ ...product, name: e.target.value })
-            }
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Silk Saree"
           />
         </div>
 
@@ -77,10 +97,9 @@ const AddProduct = () => {
           <label>Description</label>
           <textarea
             rows="3"
-            value={product.description}
-            onChange={(e) =>
-              setProduct({ ...product, description: e.target.value })
-            }
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Product details..."
           />
         </div>
 
@@ -88,55 +107,51 @@ const AddProduct = () => {
           <label>Price *</label>
           <input
             type="number"
-            value={product.price}
-            onChange={(e) =>
-              setProduct({ ...product, price: Number(e.target.value) })
-            }
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder="e.g. 500"
           />
         </div>
 
         <div className="form-group">
-          <label>Main Image URL *</label>
+          <label>Stock Quantity</label>
           <input
-            value={product.image}
-            onChange={(e) =>
-              setProduct({ ...product, image: e.target.value })
-            }
+            type="number"
+            value={stockQuantity}
+            onChange={(e) => setStockQuantity(Number(e.target.value))}
+            placeholder="e.g. 10"
+            min="0"
           />
         </div>
 
         <div className="form-group">
-          <label>Second Image URL</label>
+          <label>Main Image *</label>
           <input
-            value={product.sImage}
-            onChange={(e) =>
-              setProduct({ ...product, sImage: e.target.value })
-            }
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleImageChange(e, setMainImage, setMainPreview)}
           />
+          {mainPreview && <img src={mainPreview} alt="Main Preview" className="image-preview" />}
         </div>
 
         <div className="form-group">
-          <label>Third Image URL</label>
+          <label>Second Image</label>
           <input
-            value={product.tImage}
-            onChange={(e) =>
-              setProduct({ ...product, tImage: e.target.value })
-            }
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleImageChange(e, setSecondImage, setSecondPreview)}
           />
+          {secondPreview && <img src={secondPreview} alt="Second Preview" className="image-preview" />}
         </div>
 
-        <div className="stock-toggle">
-          <label>
-            <input
-              className="st"
-              type="checkbox"
-              checked={product.stock}
-              onChange={(e) =>
-                setProduct({ ...product, stock: e.target.checked })
-              }
-            />
-            In Stock
-          </label>
+        <div className="form-group">
+          <label>Third Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleImageChange(e, setThirdImage, setThirdPreview)}
+          />
+          {thirdPreview && <img src={thirdPreview} alt="Third Preview" className="image-preview" />}
         </div>
 
         <div className="form-actions">
@@ -146,7 +161,7 @@ const AddProduct = () => {
             disabled={loading}
             onClick={addProduct}
           >
-            {loading ? "Saving..." : "Save Product"}
+            {loading ? "Uploading..." : "Save Product"}
           </button>
 
           <button

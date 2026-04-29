@@ -9,6 +9,12 @@ export const authService = {
 
   // Check OTP
   checkOtp: (data) => api.post("/auth/check", data),
+  
+  // Verify OTP
+  verifyOTP: (data) => api.post("/auth/check", data),
+
+  // Resend OTP
+  resendOTP: (email) => api.post("/auth/resend-otp", { email }),
 
   // Login
   login: (credentials) => api.post("/auth/login", credentials),

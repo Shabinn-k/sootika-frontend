@@ -9,14 +9,14 @@ import Shop from "./pages/shop/Shop";
 import About from "./pages/About.jsx";
 
 import AdminProtected from "./Admin/AdminProtected.jsx";
-import Dashboard from "./Admin/Pages/Dashboard/Dashboard.jsx";
-import AdminProducts from "./Admin/Pages/ProductMng/AdminProducts.jsx";
-import ProductDetail from "./Admin/Pages/ProductMng/ProductDetail.jsx";
-import AddProduct from "./Admin/Pages/ProductMng/AddProducts.jsx";
-import EditProduct from "./Admin/Pages/ProductMng/EditProducts.jsx";
-import UserDetail from "./Admin/Pages/UserMng/UserDetail.jsx";
-import AdminFeedback from "./Admin/Pages/FeedBack/AdminFeedback.jsx";
-import OrderDet from "./Admin/Pages/OrderMng/AdminOrders.jsx";
+const Dashboard = lazy(() => import("./Admin/Pages/Dashboard/Dashboard.jsx"));
+const AdminProducts = lazy(() => import("./Admin/Pages/ProductMng/AdminProducts.jsx"));
+const ProductDetail = lazy(() => import("./Admin/Pages/ProductMng/ProductDetail.jsx"));
+const AddProduct = lazy(() => import("./Admin/Pages/ProductMng/AddProducts.jsx"));
+const EditProduct = lazy(() => import("./Admin/Pages/ProductMng/EditProducts.jsx"));
+const UserDetail = lazy(() => import("./Admin/Pages/UserMng/UserDetail.jsx"));
+const AdminFeedback = lazy(() => import("./Admin/Pages/FeedBack/AdminFeedback.jsx"));
+const OrderDet = lazy(() => import("./Admin/Pages/OrderMng/AdminOrders.jsx"));
 
 // Lazy pages
 const Cart = lazy(() => import("./pages/Cart/Cart.jsx"));

@@ -1,9 +1,12 @@
-// api/Axios.js
+// src/api/Axios.js
 import axios from "axios";
 
-// Get API URL from environment or default. 
-// Uses empty string to rely on Vite proxy during local development
-const API_URL = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : "";
+// In development, use empty string to go through Vite proxy
+// In production, use the environment variable
+const API_URL = import.meta.env.DEV ? "" : (import.meta.env.VITE_API_URL || "http://localhost:8080");
+
+console.log("Environment:", import.meta.env.DEV ? "Development" : "Production");
+console.log("API_URL:", API_URL || "Using Vite proxy");
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -13,11 +16,13 @@ export const api = axios.create({
   },
 });
 
-// Request interceptor
+// Request interceptor for debugging
 api.interceptors.request.use(
   (config) => {
-    // Exclude endpoints that don't need authentication
-    const publicEndpoints = ["/auth/login", "/auth/signup"];
+    const fullUrl = config.baseURL + config.url;
+    console.log(`📤 ${config.method?.toUpperCase()} ${fullUrl}`);
+    
+    const publicEndpoints = ["/auth/login", "/auth/signup", "/auth/check"];
     const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
 
     const token = localStorage.getItem("token");
@@ -27,6 +32,7 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error("Request error:", error);
     return Promise.reject(error);
   }
 );
@@ -34,26 +40,25 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    // Handle different response structures from your backend
+    console.log(`📥 ${response.config.url} -> ${response.status}`);
     return response;
   },
   (error) => {
-    if (error.response) {
-      // Backend returned error
-      console.error("API Error:", error.response.data);
-      
-      if (error.response.status === 401) {
-        // Token expired or invalid
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("admin");
-        window.dispatchEvent(new Event("unauthorized"));
-      }
-    } else if (error.request) {
-      // Request made but no response
-      console.error("No response from server:", error.request);
-      // Show user-friendly message
-      error.message = "Cannot connect to server. Please check if backend is running.";
+    console.error("❌ API Error:", {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+    
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("admin");
+      localStorage.removeItem("refresh_token");
+      window.dispatchEvent(new Event("unauthorized"));
+    } else if (error.code === "ERR_NETWORK") {
+      error.message = "Cannot connect to server. Please check if backend is running on port 8080";
     }
     
     return Promise.reject(error);

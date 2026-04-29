@@ -41,6 +41,7 @@ const WriteFeed = () => {
       toast.success("Thank you for your feedback!");
       navigate("/");
     } catch (err) {
+      console.error("Failed to submit feedback:", err);
       toast.error("Failed to submit feedback");
     } finally {
       setLoading(false);

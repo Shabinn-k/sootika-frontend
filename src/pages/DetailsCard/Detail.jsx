@@ -27,6 +27,7 @@ const Detail = () => {
         setProduct(res.data);
         setMainImg(res.data.image);
       } catch (err) {
+        console.error("Failed to load product:", err);
         toast.error("Failed to load product");
         navigate("/shop");
       }

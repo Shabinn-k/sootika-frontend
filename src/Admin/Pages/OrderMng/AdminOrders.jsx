@@ -13,7 +13,7 @@ const AdminOrders = () => {
   ===================== */
   const fetchOrders = async () => {
     try {
-      const res = await api.get("/users");
+      const res = await api.get("/admin/users");
 
       const list = res.data.flatMap((user) =>
         (user.orders || []).map((order) => ({
@@ -48,7 +48,7 @@ const AdminOrders = () => {
     try {
       setLoadingId(orderId);
 
-      const res = await api.get(`/users/${userId}`);
+      const res = await api.get(`/admin/users/${userId}`);
       const user = res.data;
 
       const updatedOrders = (user.orders || []).map((order) =>
@@ -57,7 +57,7 @@ const AdminOrders = () => {
           : order
       );
 
-      await api.patch(`/users/${userId}`, {
+      await api.patch(`/admin/users/${userId}`, {
         orders: updatedOrders,
       });
 

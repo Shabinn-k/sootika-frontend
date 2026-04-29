@@ -89,12 +89,12 @@ const Dashboard = () => {
           onClick={() => goTo("/admin/users")}
         >
           {(stats.recent_users || []).map((user, index) => (
-              <div className="recent-item" key={index}>
-                <p><b>Name:</b> {user.name}</p>
-                <p><b>Email:</b> {user.email}</p>
-                <p><b>Role:</b> {user.role}</p>
-              </div>
-            ))}
+            <div className="recent-item" key={index}>
+              <p><b>Name:</b> {user.name}</p>
+              <p><b>Email:</b> {user.email}</p>
+              <p><b>Role:</b> {user.role}</p>
+            </div>
+          ))}
         </div>
 
       </div>

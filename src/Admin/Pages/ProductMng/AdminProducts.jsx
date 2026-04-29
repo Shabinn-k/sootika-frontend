@@ -2,43 +2,45 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../../api/Axios";
 import Layout from "../../Components/Layout";
+import { toast } from "react-toastify";
 import "./AdminProducts.css";
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
   const navigate = useNavigate();
 
-  /* =====================
-     FETCH PRODUCTS
-  ===================== */
   const getProducts = async () => {
     try {
       setLoading(true);
       const res = await api.get("/products");
-      setProducts(res.data);
+      // Handle both response formats
+      const productList = res.data?.data || res.data || [];
+      setProducts(Array.isArray(productList) ? productList : []);
     } catch (err) {
       console.error(err);
-      alert("Failed to load products");
+      toast.error("Failed to load products");
+      setProducts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  /* =====================
-     DELETE PRODUCT
-  ===================== */
   const deleteProduct = async (id) => {
     if (!window.confirm("Delete this product?")) return;
 
     try {
-      await api.delete(`/products/${id}`);
+      setDeletingId(id);
+      await api.delete(`/admin/products/${id}`);
       setProducts(prev => prev.filter(p => p.id !== id));
-      alert("Product deleted");
+      toast.success("Product deleted successfully");
     } catch (err) {
       console.error(err);
-      alert("Failed to delete product");
+      toast.error("Failed to delete product");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -46,21 +48,16 @@ const AdminProducts = () => {
     getProducts();
   }, []);
 
-  /* =====================
-     SEARCH FILTER
-  ===================== */
-  const filteredProducts = products.filter(p =>
-    p.title.toLowerCase().includes(search.toLowerCase()) ||
+  const filteredProducts = (Array.isArray(products) ? products : []).filter(p =>
+    p.title?.toLowerCase().includes(search.toLowerCase()) ||
     p.name?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <Layout>
       <div className="admin-products">
-
         <div className="admin-header">
           <h2>Products</h2>
-
           <button
             className="add-product-btn"
             onClick={() => navigate("/admin/products/add")}
@@ -83,60 +80,53 @@ const AdminProducts = () => {
           <table className="product-table">
             <thead>
               <tr>
+                <th>Image</th>
                 <th>Title</th>
                 <th>Price</th>
                 <th>Stock</th>
-                <th>Update</th>
+                <th>Actions</th>
               </tr>
             </thead>
-
             <tbody>
               {filteredProducts.length > 0 ? (
                 filteredProducts.map(p => (
                   <tr key={p.id}>
-                    <td
-                      className="clickable"
-                      onClick={() => navigate(`/admin/products/${p.id}`)}
-                    >
+                    <td>
+                      <img 
+                        src={p.main_image || p.image} 
+                        alt={p.title}
+                        style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "8px" }}
+                      />
+                    </td>
+                    <td className="clickable" onClick={() => navigate(`/admin/products/${p.id}`)}>
                       {p.title}
                     </td>
-
-                    <td
-                      className="clickable"
-                      onClick={() => navigate(`/admin/products/${p.id}`)}
-                    >
+                    <td className="clickable" onClick={() => navigate(`/admin/products/${p.id}`)}>
                       ₹ {p.price}
                     </td>
-
-                    <td className={p.stock ? "stock-in" : "stock-out"}>
-                      {p.stock ? "In Stock" : "Out of Stock"}
+                    <td className={p.in_stock || p.stock ? "stock-in" : "stock-out"}>
+                      {p.in_stock || p.stock ? "In Stock" : "Out of Stock"}
                     </td>
-
                     <td>
                       <div className="action-btns">
                         <button
                           className="view-btn"
-                          onClick={() =>
-                            navigate(`/admin/products/${p.id}`)
-                          }
+                          onClick={() => navigate(`/admin/products/${p.id}`)}
                         >
                           View
                         </button>
-
                         <button
                           className="edit-btn"
-                          onClick={() =>
-                            navigate(`/admin/products/edit/${p.id}`)
-                          }
+                          onClick={() => navigate(`/admin/products/edit/${p.id}`)}
                         >
                           Edit
                         </button>
-
                         <button
                           className="delete-btn"
                           onClick={() => deleteProduct(p.id)}
+                          disabled={deletingId === p.id}
                         >
-                          Delete
+                          {deletingId === p.id ? "..." : "Delete"}
                         </button>
                       </div>
                     </td>
@@ -144,7 +134,7 @@ const AdminProducts = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="no-data">
+                  <td colSpan="5" className="no-data">
                     No products found
                   </td>
                 </tr>
@@ -152,7 +142,6 @@ const AdminProducts = () => {
             </tbody>
           </table>
         )}
-
       </div>
     </Layout>
   );

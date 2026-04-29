@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useFormik } from "formik";
 import { Validation } from "../Authentication/Validation";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Authentication/AuthContext";
+import OTPVerification from "../components/Auth/OTPVerification";
 import "./Registration.css";
 
 const initialValues = {
@@ -16,16 +18,19 @@ const initialValues = {
 const Registration = () => {
   const navigate = useNavigate();
   const { signup } = useAuth();
+  const [showOTP, setShowOTP] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
   const formik = useFormik({
     initialValues,
     validationSchema: Validation,
     onSubmit: async (values, { setSubmitting }) => {
-      const success = await signup(values);
+      const res = await signup(values);
       setSubmitting(false);
 
-      if (success) {
-        navigate("/");
+      if (res && res.success) {
+        setRegisteredEmail(res.email);
+        setShowOTP(true);
       }
     },
   });
@@ -42,9 +47,16 @@ const Registration = () => {
 
   return (
     <div className="register-page">
+      {showOTP && (
+        <OTPVerification 
+          email={registeredEmail} 
+          onVerifySuccess={() => navigate("/")}
+          onCancel={() => setShowOTP(false)}
+        />
+      )}
       <form onSubmit={handleSubmit} className="register-card">
-        <h2>Create Your Account</h2>
-        <p className="subtitle">Join us and start shopping!</p>
+        <h2>Create Account</h2>
+        <p className="subtitle">Join Sootika family</p>
 
         {/* Name */}
         <div className="input-group">
@@ -127,19 +139,20 @@ const Registration = () => {
         </div>
 
         {/* Terms */}
-        <div className="login-popup-condition">
+        <div className="terms-group">
           <input
             type="checkbox"
             name="agree"
+            id="agree"
             checked={values.agree}
             onChange={handleChange}
           />
-          <p>
-            By continuing, I agree to the terms of use & privacy policy.
-          </p>
+          <label htmlFor="agree">
+            I agree to the <span>Terms of Use</span> & <span>Privacy Policy</span>
+          </label>
         </div>
         {touched.agree && errors.agree && (
-          <small>{errors.agree}</small>
+          <small className="error-text">{errors.agree}</small>
         )}
 
         <button
@@ -147,8 +160,12 @@ const Registration = () => {
           className="register-btn"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Creating account..." : "Create Account"}
+          {isSubmitting ? "Creating..." : "Sign Up"}
         </button>
+
+        <p className="login-link">
+          Already have an account? <span onClick={() => navigate("/")}>Sign In</span>
+        </p>
       </form>
     </div>
   );
