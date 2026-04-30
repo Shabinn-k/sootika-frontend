@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 import { useAuth } from "./AuthContext";
+import { toast } from "react-toastify";
 
 const Login = ({ setShowLogin }) => {
   const { login } = useAuth();
@@ -11,10 +12,16 @@ const Login = ({ setShowLogin }) => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [agree, setAgree] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!agree) return;
+    setError("");
+    
+    if (!agree) {
+      toast.warn("Please agree to the terms of use & privacy policy");
+      return;
+    }
 
     setLoading(true);
     const success = await login(email, password);
@@ -22,27 +29,27 @@ const Login = ({ setShowLogin }) => {
 
     if (success === true) {
       setShowLogin(false);
+    } else {
+      setError("Invalid email or password");
     }
   };
 
   return (
-    <div className="login-popup">
+    <div className="login-popup" onClick={(e) => {
+      if (e.target === e.currentTarget) setShowLogin(false);
+    }}>
       <form onSubmit={handleSubmit} className="login-popup-container">
-
         <div className="login-poup-title">
-          <h2 className="font-extrabold text-4xl">Sign In</h2>
-          <h2
-            onClick={() => setShowLogin(false)}
-            className="close-btn font-bold text-2xl"
-          >
-            X
+          <h2>Sign In</h2>
+          <h2 onClick={() => setShowLogin(false)} className="close-btn">
+            ✕
           </h2>
         </div>
 
         <div className="login-popup-inputs">
           <input
             type="email"
-            placeholder="E-mail"
+            placeholder="Email Address"
             required
             autoComplete="username"
             value={email}
@@ -51,7 +58,7 @@ const Login = ({ setShowLogin }) => {
 
           <input
             type="password"
-            placeholder="* * * * * * * *"
+            placeholder="Password"
             required
             autoComplete="current-password"
             value={password}
@@ -59,18 +66,23 @@ const Login = ({ setShowLogin }) => {
           />
         </div>
 
-        <button type="submit" disabled={loading}>
+        {error && <div className="error-message">{error}</div>}
+
+        <button type="submit" disabled={loading || !agree}>
           {loading ? "Logging in..." : "Login"}
         </button>
 
         <div className="login-popup-condition">
           <input
             type="checkbox"
+            id="agreeTerms"
             checked={agree}
             onChange={(e) => setAgree(e.target.checked)}
             required
           />
-          <p>By continuing, I agree to the terms of use & privacy policy.</p>
+          <label htmlFor="agreeTerms">
+            By continuing, I agree to the terms of use & privacy policy.
+          </label>
         </div>
 
         <p>
@@ -84,10 +96,9 @@ const Login = ({ setShowLogin }) => {
             Click here
           </span>
         </p>
-
       </form>
     </div>
   );
 };
 
-export default Login;
+export default Login; 

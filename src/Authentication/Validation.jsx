@@ -20,10 +20,13 @@ export const Validation = Yup.object({
     .max(20, "Password must be at most 20 characters")
     .matches(/(?=.*[a-z])/, "Password must contain a lowercase letter")
     .matches(/(?=.*[A-Z])/, "Password must contain an uppercase letter")
-
     .required("Password is required"),
 
   cpass: Yup.string()
     .oneOf([Yup.ref("password")], "Passwords do not match")
     .required("Confirm password is required"),
+
+  agree: Yup.boolean()
+    .oneOf([true], "You must agree to the terms and conditions")
+    .required("You must agree to the terms"),
 });

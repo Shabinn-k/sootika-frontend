@@ -17,7 +17,46 @@
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
+/* Active link styling */
+.link-items1.active {
+  color: #a07855;
+  font-weight: 600;
+}
 
+.link-items1.active::before,
+.link-items1.active::after {
+  transform: scaleX(1);
+}
+
+/* Logout button hover effect */
+.logout {
+  transition: all 0.3s ease;
+}
+
+.logout:hover {
+  color: white;
+  background-color: #d23838;
+  transform: translateY(-2px);
+}
+
+/* Scrollbar styling */
+.admin-page::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-page::-webkit-scrollbar-track {
+  background: #f0e6d8;
+  border-radius: 4px;
+}
+
+.admin-page::-webkit-scrollbar-thumb {
+  background: #c9a47a;
+  border-radius: 4px;
+}
+
+.admin-page::-webkit-scrollbar-thumb:hover {
+  background: #a07855;
+}
 .admin-logo {
   font-size: 22px;
   font-weight: 700;

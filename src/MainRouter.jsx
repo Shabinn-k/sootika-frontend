@@ -29,21 +29,27 @@ const Orders = lazy(() => import("./pages/Orders/Orders.jsx"));
 const MainRouter = () => {
   const location = useLocation();
 
-  const hideFoot =
-    location.pathname.startsWith("/admin") ||
-    location.pathname.startsWith("/detail") ||
-    location.pathname.startsWith("/payment") ||
-    location.pathname.startsWith("/cart") ||
-    location.pathname.startsWith("/wishlist") ||
-    location.pathname.startsWith("/myOrders") ||
-    location.pathname === "/shop" ||
-    location.pathname === "/about" ||
-    location.pathname === "/404";
+  // ⚠️ Footer hide logic
+  const hideFooterPaths = [
+    "/admin",
+    "/detail",
+    "/payment",
+    "/cart",
+    "/wishlist",
+    "/myOrders",
+    "/shop",
+    "/about",
+    "/404",
+    "/registration"
+  ];
+  
+  const hideFoot = hideFooterPaths.some(path => 
+    location.pathname === path || location.pathname.startsWith(path + "/")
+  ) || location.pathname.startsWith("/admin");
 
   return (
     <Suspense fallback={<div className="loader">Loading...</div>}>
       <Routes>
-
         {/* USER ROUTES */}
         <Route path="/" element={<Home />} />
         <Route path="/registration" element={<Registration />} />
@@ -107,8 +113,7 @@ const MainRouter = () => {
 
         {/* 404 */}
         <Route path="/404" element={<NotFound />} />
-        <Route path="*" element={<Navigate to="/404" />} />
-
+        <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
 
       {!hideFoot && <Footer />}

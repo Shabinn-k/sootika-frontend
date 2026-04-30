@@ -18,7 +18,111 @@
   text-align: center;
   color: #4b3a26;
 }
+/* Image preview thumb */
+.image-preview-thumb {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e6d5bd;
+}
 
+/* Image upload section */
+.image-upload-section {
+  border: 1px solid #e6d5bd;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  background: #faf5ee;
+}
+
+.image-upload-section h4 {
+  margin-bottom: 10px;
+  color: #5a4634;
+}
+
+.image-upload-note {
+  font-size: 12px;
+  color: #7a6859;
+  margin-bottom: 15px;
+}
+
+.image-upload-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.image-upload-row label {
+  display: inline-block;
+  width: 100px;
+  font-weight: 600;
+  color: #5f4a34;
+}
+
+/* Textarea styling */
+.form-group textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e6d5bd;
+  background: #faf5ee;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: 0.25s ease;
+}
+
+.form-group textarea:focus {
+  border-color: #c9a47a;
+  box-shadow: 0 0 6px rgba(201, 164, 122, 0.4);
+}
+
+/* Small text helpers */
+.form-group small {
+  display: block;
+  font-size: 11px;
+  margin-top: 5px;
+  color: #7a6859;
+}
+
+.form-group small.info {
+  color: #ed6c02;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #6d4c2f;
+}
+
+/* Disabled input */
+.form-group input:disabled {
+  background: #f0e8dd;
+  cursor: not-allowed;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .image-upload-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .image-upload-row label {
+    width: auto;
+  }
+  
+  .image-preview-thumb {
+    width: 80px;
+    height: 80px;
+  }
+}
 /* Input group */
 .form-group {
   margin-bottom: 18px;

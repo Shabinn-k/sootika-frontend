@@ -2,40 +2,64 @@ import { useEffect, useState } from "react";
 import { adminService } from "../../../api/admin";
 import { toast } from "react-toastify";
 import Layout from "../../Components/Layout";
+import { useAuth } from "../../../Authentication/AuthContext";
+import { useNavigate } from "react-router-dom";
 import "./AdminFeedback.css";
 
 const AdminFeedback = () => {
+  const navigate = useNavigate();
+  const { admin, loading: authLoading } = useAuth();
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ⚠️ FIX: Check admin access
   useEffect(() => {
-    const fetchFeedbacks = async () => {
-      try {
-        const res = await adminService.getFeedbacks();
-        setFeedbacks(res.data.data || res.data || []);
-      } catch (error) {
-        console.error("Failed to fetch feedbacks", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!authLoading && !admin) {
+      toast.error("Access denied. Admin only.");
+      navigate("/");
+    }
+  }, [admin, authLoading, navigate]);
 
-    fetchFeedbacks();
-  }, []);
+  const fetchFeedbacks = async () => {
+    try {
+      const res = await adminService.getFeedbacks();
+      // ⚠️ FIX: Handle both ID and id field names
+      const data = res.data?.data || res.data || [];
+      setFeedbacks(data);
+    } catch (error) {
+      console.error("Failed to fetch feedbacks", error);
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+      } else {
+        toast.error("Failed to load feedbacks");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!authLoading && admin) {
+      fetchFeedbacks();
+    }
+  }, [authLoading, admin]);
 
   const approve = async (id) => {
     try {
       await adminService.approveFeedback(id);
-
+      
+      // ⚠️ FIX: Support both ID and id field names
       setFeedbacks((prev) =>
-        prev.map((item) =>
-          item.ID === id ? { ...item, feed: "approved" } : item
-        )
+        prev.map((item) => {
+          const itemId = item.ID || item.id;
+          return itemId === id ? { ...item, feed: "approved" } : item;
+        })
       );
       toast.success("Feedback approved");
     } catch (error) {
       console.error("Approve failed", error);
-      toast.error("Failed to approve feedback");
+      toast.error(error.response?.data?.message || "Failed to approve feedback");
     }
   };
 
@@ -45,13 +69,32 @@ const AdminFeedback = () => {
 
     try {
       await adminService.deleteFeedback(id);
-      setFeedbacks((prev) => prev.filter((item) => item.ID !== id));
+      // ⚠️ FIX: Support both ID and id field names
+      setFeedbacks((prev) => prev.filter((item) => {
+        const itemId = item.ID || item.id;
+        return itemId !== id;
+      }));
       toast.success("Feedback deleted");
     } catch (error) {
       console.error("Delete failed", error);
-      toast.error("Failed to delete feedback");
+      toast.error(error.response?.data?.message || "Failed to delete feedback");
     }
   };
+
+  // ⚠️ FIX: Loading states
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="admin-feed-pg">
+          <div className="loading-spinner">Verifying access...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!admin) {
+    return null;
+  }
 
   return (
     <Layout>
@@ -59,7 +102,7 @@ const AdminFeedback = () => {
         <h2>User Feedbacks</h2>
 
         {loading ? (
-          <p>Loading feedbacks...</p>
+          <div className="loading-spinner">Loading feedbacks...</div>
         ) : feedbacks.length === 0 ? (
           <p>No feedbacks given</p>
         ) : (
@@ -74,23 +117,37 @@ const AdminFeedback = () => {
             </thead>
 
             <tbody>
-              {feedbacks.map((item) => (
-                <tr key={item.ID}>
-                  <td>{item.name}</td>
-                  <td>{item.review}</td>
-                  <td>{"★".repeat(item.rating)}{"☆".repeat(5 - item.rating)}</td>
-                  <td>
-                    <button className="ys-btn" onClick={() => approve(item.ID)}
-                      disabled={item.feed === "approved"}>
-                      {item.feed === "approved" ? "Approved" : "Approve"}
-                    </button>
+              {feedbacks.map((item) => {
+                const itemId = item.ID || item.id;
+                const isApproved = item.feed === "approved";
+                
+                return (
+                  <tr key={itemId}>
+                    <td>{item.name || item.user_name || "Anonymous"}</td>
+                    <td>{item.review || item.feedback || item.message}</td>
+                    <td>
+                      {"★".repeat(item.rating || 0)}
+                      {"☆".repeat(5 - (item.rating || 0))}
+                    </td>
+                    <td>
+                      <button 
+                        className="ys-btn" 
+                        onClick={() => approve(itemId)}
+                        disabled={isApproved}
+                      >
+                        {isApproved ? "Approved" : "Approve"}
+                      </button>
 
-                    <button className="dlt-btn" onClick={() => deleteFeed(item.ID)}>
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                      <button 
+                        className="dlt-btn" 
+                        onClick={() => deleteFeed(itemId)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

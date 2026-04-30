@@ -1,26 +1,20 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   server: {
     port: 5173,
-    historyApiFallback: true,
     proxy: {
-      '/auth': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/user': {
+      '/auth': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/admin': {
+      '/user': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
@@ -36,6 +30,22 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
+      '/payment': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/addresses': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/orders': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/admin': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      }
     }
   }
 })

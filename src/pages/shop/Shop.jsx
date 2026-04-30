@@ -14,8 +14,8 @@ const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  const { user } = useAuth();
-  const { addToCart, addToWish } = useContext(CartContext);
+  const { user, loading: authLoading } = useAuth(); // ⚠️ ADD authLoading
+  const { addToCart, addToWish, loading: cartLoading } = useContext(CartContext); // ⚠️ ADD cartLoading
 
   // Fetch products from API
   useEffect(() => {
@@ -23,8 +23,6 @@ const Shop = () => {
       try {
         setLoading(true);
         const response = await productService.getAllProducts();
-        // Handle the response structure from your backend
-        // Backend returns: { data: products, count }
         setProducts(response.data || []);
       } catch (error) {
         console.error("Failed to fetch products:", error);
@@ -43,30 +41,48 @@ const Shop = () => {
     item.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = async (product) => { // ⚠️ Make async
     if (!user) {
       toast.warn("Please login to add items to Cart!");
       return;
     }
 
-    if (product.stock === false || product.in_stock === false) {
+    const isOutOfStock = product.stock === false || product.stock === 0 || product.in_stock === false;
+    if (isOutOfStock) {
       toast.error("Product is out of stock!");
       return;
     }
 
-    addToCart(product);
-    toast.success("Added to cart");
+    try {
+      await addToCart(product);
+      toast.success("Added to cart");
+    } catch {
+      toast.error("Failed to add to cart");
+    }
   };
 
-  const handleAddToWish = (product) => {
+  const handleAddToWish = async (product) => { // ⚠️ Make async
     if (!user) {
       toast.warn("Please login to add items to Wishlist!");
       return;
     }
-    addToWish(product);
+
+    const isOutOfStock = product.stock === false || product.stock === 0 || product.in_stock === false;
+    if (isOutOfStock) {
+      toast.error("Cannot add out of stock items to wishlist");
+      return;
+    }
+
+    try {
+      await addToWish(product);
+      toast.success("Added to wishlist");
+    } catch {
+      toast.error("Failed to add to wishlist");
+    }
   };
 
-  if (loading) {
+  // ⚠️ FIX: Show loading state
+  if (loading || authLoading) {
     return (
       <div className="shop-page">
         <div className="back-home" onClick={() => navigate("/")}>
@@ -76,6 +92,8 @@ const Shop = () => {
       </div>
     );
   }
+
+  const isAddingToCart = cartLoading; // For button disable feedback
 
   return (
     <div className="shop-page">
@@ -93,41 +111,45 @@ const Shop = () => {
 
       <div className="product-grid">
         {filteredProducts.length > 0 ? (
-          filteredProducts.map((item) => (
-            <div className="product-card" key={item.id}>
-              <div className="image-box">
-                <FaHeart
-                  className={`wishlist-icon ${!user ? "disabled" : ""}`}
-                  onClick={() => user && handleAddToWish(item)}
-                />
-                <img
-                  src={item.main_image || item.image}
-                  alt={item.title}
-                  onClick={() => navigate(`/detail/${item.id}`)}
-                />
+          filteredProducts.map((item) => {
+            const isOutOfStock = item.stock === false || item.stock === 0 || item.in_stock === false;
+            
+            return (
+              <div className="product-card" key={item.id}>
+                <div className="image-box">
+                  <FaHeart
+                    className={`wishlist-icon ${(!user || isOutOfStock) ? "disabled" : ""}`}
+                    onClick={() => user && !isOutOfStock && handleAddToWish(item)} // ⚠️ FIX: Check stock
+                  />
+                  <img
+                    src={item.main_image || item.image}
+                    alt={item.title}
+                    onClick={() => navigate(`/detail/${item.id}`)}
+                  />
+                </div>
+
+                <h3 onClick={() => navigate(`/detail/${item.id}`)}>
+                  {item.title}
+                </h3>
+
+                <h2 className="name">{item.name}</h2>
+
+                <p className={`stock ${isOutOfStock ? "out" : ""}`}>
+                  {isOutOfStock ? "Out of Stock" : "In Stock"}
+                </p>
+
+                <span className="price">₹ {item.price}</span>
+
+                <button
+                  className="addCart"
+                  disabled={isOutOfStock || isAddingToCart}
+                  onClick={() => handleAddToCart(item)}
+                >
+                  {isAddingToCart ? "Adding..." : (isOutOfStock ? "Out of Stock" : "Add to Cart")}
+                </button>
               </div>
-
-              <h3 onClick={() => navigate(`/detail/${item.id}`)}>
-                {item.title}
-              </h3>
-
-              <h2 className="name">{item.name}</h2>
-
-              <p className={`stock ${(item.stock === false || item.in_stock === false) ? "out" : ""}`}>
-                {(item.stock > 0 || item.in_stock === true) ? "In Stock" : "Out of Stock"}
-              </p>
-
-              <span className="price">₹ {item.price}</span>
-
-              <button
-                className="addCart"
-                disabled={item.stock === 0 || item.in_stock === false}
-                onClick={() => handleAddToCart(item)}
-              >
-                {item.stock > 0 ? "Add to Cart" : "Out of Stock"}
-              </button>
-            </div>
-          ))
+            );
+          })
         ) : (
           <p className="noProduct">No products found</p>
         )}

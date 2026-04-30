@@ -1,44 +1,80 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { api } from "../../../api/Axios";
+import { api, initAuth } from "../../../api/Axios";
 import Layout from "../../Components/Layout";
+import { useAuth } from "../../../Authentication/AuthContext";
 import { toast } from "react-toastify";
 import "./ProductDetail.css";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { admin, loading: authLoading } = useAuth();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mainImg, setMainImg] = useState("");
   const [error, setError] = useState("");
 
+  // ⚠️ FIX: Check admin access
+  useEffect(() => {
+    if (!authLoading && !admin) {
+      toast.error("Access denied. Admin only.");
+      navigate("/");
+    }
+  }, [admin, authLoading, navigate]);
+
   useEffect(() => {
     const fetchProduct = async () => {
+      if (!admin) return;
+      
       try {
+        setLoading(true);
+        await initAuth(); // ⚠️ FIX: Wait for auth
         const res = await api.get(`/products/${id}`);
         setProduct(res.data);
         setMainImg(res.data.main_image || res.data.image);
       } catch (err) {
         console.error(err);
-        setError("Product not found");
-        toast.error("Failed to load product");
+        if (err.response?.status === 401) {
+          toast.error("Session expired. Please login again.");
+          navigate("/login");
+        } else {
+          setError("Product not found");
+          toast.error("Failed to load product");
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProduct();
-  }, [id]);
+    if (!authLoading && admin) {
+      fetchProduct();
+    }
+  }, [id, admin, authLoading, navigate]);
 
+  // ⚠️ FIX: Helper to check stock
   const isInStock = product?.in_stock || product?.stock > 0;
+  const mainImage = product?.main_image || product?.image;
+
+  // ⚠️ FIX: Loading states
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="product-detail">
+          <div className="loading-spinner">Verifying access...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!admin) return null;
 
   if (loading) {
     return (
       <Layout>
-        <div style={{ padding: "40px", textAlign: "center" }}>
-          <p>Loading product...</p>
+        <div className="product-detail">
+          <div className="loading-spinner">Loading product...</div>
         </div>
       </Layout>
     );
@@ -47,14 +83,16 @@ const ProductDetail = () => {
   if (error || !product) {
     return (
       <Layout>
-        <div style={{ padding: "40px", textAlign: "center" }}>
-          <p>{error || "Product not found"}</p>
-          <button 
-            onClick={() => navigate("/admin/products")}
-            style={{ marginTop: "20px", padding: "10px 20px", cursor: "pointer" }}
-          >
-            Back to Products
-          </button>
+        <div className="product-detail">
+          <div className="error-container">
+            <p>{error || "Product not found"}</p>
+            <button 
+              className="back-btn"
+              onClick={() => navigate("/admin/products")}
+            >
+              ← Back to Products
+            </button>
+          </div>
         </div>
       </Layout>
     );
@@ -69,26 +107,27 @@ const ProductDetail = () => {
               src={mainImg}
               alt={product.title}
               onError={(e) => {
-                e.target.src = "https://via.placeholder.com/500";
+                e.target.src = "https://via.placeholder.com/500?text=No+Image";
               }}
             />
           </div>
           
           {(product.second_image || product.third_image) && (
-            <div className="product-thumbnails" style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-              {(product.main_image || product.image) && (
+            <div className="product-thumbnails">
+              {/* ⚠️ FIX: Use mainImage variable */}
+              {mainImage && (
                 <img 
-                  src={product.main_image || product.image}
+                  src={mainImage}
                   alt="Main view"
-                  style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer', border: mainImg === (product.main_image || product.image) ? '2px solid #c9a47a' : '1px solid #e6d5bd' }}
-                  onClick={() => setMainImg(product.main_image || product.image)}
+                  className={`thumbnail ${mainImg === mainImage ? "active" : ""}`}
+                  onClick={() => setMainImg(mainImage)}
                 />
               )}
               {product.second_image && (
                 <img 
                   src={product.second_image}
                   alt="Second view"
-                  style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer', border: mainImg === product.second_image ? '2px solid #c9a47a' : '1px solid #e6d5bd' }}
+                  className={`thumbnail ${mainImg === product.second_image ? "active" : ""}`}
                   onClick={() => setMainImg(product.second_image)}
                 />
               )}
@@ -96,7 +135,7 @@ const ProductDetail = () => {
                 <img 
                   src={product.third_image}
                   alt="Third view"
-                  style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer', border: mainImg === product.third_image ? '2px solid #c9a47a' : '1px solid #e6d5bd' }}
+                  className={`thumbnail ${mainImg === product.third_image ? "active" : ""}`}
                   onClick={() => setMainImg(product.third_image)}
                 />
               )}
@@ -106,16 +145,16 @@ const ProductDetail = () => {
 
         <h2>{product.title}</h2>
         {product.name && (
-          <p style={{ color: '#7a6859', fontSize: '14px' }}>{product.name}</p>
+          <p className="product-subtitle">{product.name}</p>
         )}
 
         <p className="product-info">
-          <span style={{ fontWeight: 600, color: '#5a4634' }}>Description:</span>{" "}
+          <span>Description:</span> 
           {product.description || "No description provided"}
         </p>
 
         <p className="product-info">
-          <span style={{ fontWeight: 600, color: '#5a4634' }}>Price:</span> ₹ {product.price}
+          <span>Price:</span> ₹ {product.price?.toLocaleString()}
         </p>
 
         <div className={`stock-badge ${isInStock ? "stock-in" : "stock-out"}`}>
@@ -123,18 +162,16 @@ const ProductDetail = () => {
           {product.stock > 0 && <span> ({product.stock} available)</span>}
         </div>
 
-        <div className="detail-actions" style={{ display: 'flex', gap: '15px', marginTop: '30px' }}>
+        <div className="detail-actions">
           <button
             className="edit-btn"
             onClick={() => navigate(`/admin/products/edit/${id}`)}
-            style={{ flex: 1, padding: '12px', background: '#c9a47a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
           >
             ✏️ Edit Product
           </button>
           <button
             className="back-btn"
             onClick={() => navigate("/admin/products")}
-            style={{ flex: 1, padding: '12px', background: '#e6d5bd', color: '#5a4634', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
           >
             ← Back to List
           </button>

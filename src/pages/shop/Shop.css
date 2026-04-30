@@ -22,7 +22,13 @@
   width: fit-content;
   transition: 0.2s;
 }
-
+/* Loading spinner */
+.loading-spinner {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #6d4c2f;
+}
 .back-home:hover {
   color: #9f774c;
 }

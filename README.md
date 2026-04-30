@@ -1,16 +1,79 @@
-# React + Vite
+FRONTEND README (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# 🛍️ Sootika Frontend
 
-Currently, two official plugins are available:
+Frontend of the Sootika e-commerce application built using **React + Vite**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🚀 Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React (Vite)
+- Axios (API handling)
+- Context API (Auth, Cart, Wishlist)
+- Tailwind CSS
+- React Router
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 📁 Project Structure
+
+
+src/
+├── api/ # Axios instance & API services
+├── Authentication/ # AuthContext
+├── context/ # Cart & Wishlist context
+├── Admin/ # Admin dashboard & pages
+├── pages/ # User pages
+├── components/ # Reusable components
+└── App.jsx
+
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1. Clone the repo
+
+```bash
+git clone <your-repo-url>
+cd frontend
+2. Install dependencies
+npm install
+3. Run development server
+npm run dev
+
+App runs on:
+
+http://localhost:5173
+🌐 Environment Variables
+
+Create .env file:
+
+VITE_API_URL=http://localhost:8080
+🔐 Authentication Flow
+JWT-based authentication
+Tokens stored in localStorage
+Axios interceptor attaches token automatically
+Protected routes for admin & user
+🛒 Features
+User login & signup
+Product browsing
+Cart & Wishlist
+Admin dashboard
+Product management
+Razorpay payment integration
+💳 Payment (Razorpay)
+Uses Test Mode
+Test UPI:
+success@razorpay
+📦 Build
+npm run build
+
+Output folder:
+
+dist/
+⚠️ Notes
+Do not edit dist/ folder manually
+Always use api (Axios instance) for API calls
+Ensure backend is running before starting frontend

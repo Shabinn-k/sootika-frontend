@@ -22,7 +22,58 @@
   cursor: pointer;
   transition: 0.3s ease;
 }
+/* Product image */
+.product-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+}
 
+/* Clickable rows */
+.clickable {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.clickable:hover {
+  color: #c9a47a;
+  text-decoration: underline;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #6d4c2f;
+}
+
+/* No products state */
+.no-products {
+  text-align: center;
+  padding: 50px;
+  background: #fff7ec;
+  border-radius: 14px;
+}
+
+.no-products p {
+  margin-bottom: 20px;
+  color: #7a6859;
+}
+
+/* Disabled delete button */
+.delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Admin header count */
+.admin-header h2 span {
+  font-size: 14px;
+  font-weight: normal;
+  color: #7a6859;
+}
 .add-product-btn:hover {
   background: #b58c64;
 }

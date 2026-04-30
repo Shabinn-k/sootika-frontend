@@ -16,7 +16,13 @@
   font-size: 15px;
   color: #7a6a57;
 }
-
+/* Loading spinner */
+.loading-spinner {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #6d4c2f;
+}
 .feed-table {
   width: 100%;
   border-collapse: collapse;

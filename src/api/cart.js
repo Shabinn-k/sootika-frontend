@@ -1,29 +1,63 @@
-// api/cart.js
-import { api } from "./Axios";
+import { api, initAuth } from "./Axios";
 
 export const cartService = {
-  // Get cart - handle backend response structure
   getCart: async () => {
-    const res = await api.get("/cart/");
-    // Backend returns: { message, cart: { id, user_id, items } }
-    return { data: res.data.cart?.items || [] };
+    try {
+      await initAuth();
+      const res = await api.get("/cart/");
+      return { data: res.data?.items || [], success: true };
+    } catch (error) {
+      return { data: [], success: false, error: error.response?.status === 401 ? "Please login again" : error.message };
+    }
   },
 
   getCartCount: async () => {
-    const res = await api.get("/cart/count");
-    return { data: res.data.count };
+    try {
+      await initAuth();
+      const res = await api.get("/cart/count");
+      return { data: res.data?.count ?? 0, success: true };
+    } catch (error) {
+      return { data: 0, success: false };
+    }
   },
 
-  getCartTotal: async () => {
-    const res = await api.get("/cart/total");
-    return { data: res.data.total };
+  addToCart: async (itemData) => {
+    try {
+      await initAuth();
+      const res = await api.post("/cart/add", itemData);
+      return { data: res.data, success: true };
+    } catch (error) {
+      throw new Error(error.response?.status === 401 ? "Please login to add to cart" : error.response?.data?.message || "Failed to add to cart");
+    }
   },
 
-  addToCart: (itemData) => api.post("/cart/add", itemData),
+  updateCartItem: async (itemId, data) => {
+    try {
+      await initAuth();
+      const res = await api.put(`/cart/update/${itemId}`, data);
+      return { data: res.data, success: true };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || "Failed to update cart" };
+    }
+  },
 
-  updateCartItem: (itemId, data) => api.put(`/cart/update/${itemId}`, data),
+  removeFromCart: async (itemId) => {
+    try {
+      await initAuth();
+      const res = await api.delete(`/cart/remove/${itemId}`);
+      return { data: res.data, success: true };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || "Failed to remove from cart" };
+    }
+  },
 
-  removeFromCart: (itemId) => api.delete(`/cart/remove/${itemId}`),
-
-  clearCart: () => api.delete("/cart/clear"),
+  clearCart: async () => {
+    try {
+      await initAuth();
+      const res = await api.delete("/cart/clear");
+      return { data: res.data, success: true };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || "Failed to clear cart" };
+    }
+  }
 };

@@ -1,36 +1,45 @@
 import React, { useEffect, useState } from "react";
 import "./Orders.css";
-import { api } from "../../api/Axios";
+import { api, initAuth } from "../../api/Axios";
 import { useAuth } from "../../Authentication/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const Orders = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // ⚠️ ADD authLoading
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState(null); // ⚠️ ADD for cancel loading
 
-  // Fetch orders from backend
+  // Check auth and fetch orders
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       toast.warn("Please login to view orders");
       navigate("/");
       return;
     }
-
-    fetchOrders();
-  }, [user, navigate]);
+    
+    if (user && !authLoading) {
+      fetchOrders();
+    }
+  }, [user, authLoading, navigate]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      // Get orders from backend API
-      const response = await api.get("/api/orders");
-      setOrders(response.data.data || []);
+      await initAuth(); // ⚠️ FIX: Wait for auth
+      // ⚠️ FIX: Remove duplicate /api prefix
+      const response = await api.get("/orders");
+      setOrders(response.data?.data || []);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
-      toast.error("Failed to load orders");
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+      } else {
+        toast.error("Failed to load orders");
+      }
       setOrders([]);
     } finally {
       setLoading(false);
@@ -60,14 +69,31 @@ const Orders = () => {
   const cancelOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     
+    setCancellingId(orderId);
     try {
-      await api.put(`/api/orders/${orderId}/cancel`);
+      await initAuth(); // ⚠️ FIX: Wait for auth
+      // ⚠️ FIX: Remove duplicate /api prefix
+      await api.put(`/orders/${orderId}/cancel`);
       toast.success("Order cancelled successfully");
       fetchOrders(); // Refresh orders
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to cancel order");
+    } finally {
+      setCancellingId(null);
     }
   };
+
+  // ⚠️ FIX: Show auth loading state
+  if (authLoading) {
+    return (
+      <div className="orders-page">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Verifying...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -103,7 +129,7 @@ const Orders = () => {
               {/* HEADER */}
               <div className="order-header">
                 <div className="order-info">
-                  <h3>Order #{order.order_number || order.orderId}</h3>
+                  <h3>Order #{order.order_number || order.orderId || order.id?.slice(0, 8)}</h3>
                   <p className="order-date">{formatDate(order.created_at || order.date)}</p>
                 </div>
                 <span className={`order-status ${getStatusClass(order.track || order.order_status)}`}>
@@ -155,8 +181,9 @@ const Orders = () => {
                     <button 
                       className="cancel-order-btn"
                       onClick={() => cancelOrder(order.id)}
+                      disabled={cancellingId === order.id}
                     >
-                      Cancel Order
+                      {cancellingId === order.id ? "Cancelling..." : "Cancel Order"}
                     </button>
                   )}
                 </div>

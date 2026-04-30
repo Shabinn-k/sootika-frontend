@@ -24,7 +24,26 @@
   box-shadow: 0 10px 25px rgba(90, 70, 52, 0.2);
   border: 1px solid rgba(201, 164, 122, 0.2);
 }
+/* Error state */
+.otp-error {
+  text-align: center;
+  padding: 30px 20px;
+}
 
+.otp-error p {
+  color: #c62828;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.otp-error button {
+  background: #c9a47a;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
 .otp-close-btn {
   position: absolute;
   top: 12px;

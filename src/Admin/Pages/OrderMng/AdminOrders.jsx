@@ -1,125 +1,214 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../Components/Layout";
-import { api } from "../../../api/Axios";
+import { api, initAuth } from "../../../api/Axios";
+import { useAuth } from "../../../Authentication/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import LoadingSpinner from "../../Components/LoadingSpinner";
 import "./AdminOrders.css";
 
 const AdminOrders = () => {
+  const navigate = useNavigate();
+  const { admin, loading: authLoading } = useAuth();
   const [orders, setOrders] = useState([]);
-  const [loadingId, setLoadingId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null);
+
+  // Check admin access
+  useEffect(() => {
+    if (!authLoading && !admin) {
+      toast.error("Access denied. Admin only.");
+      navigate("/");
+    }
+  }, [admin, authLoading, navigate]);
+
   const fetchOrders = async () => {
     try {
-      const res = await api.get("/admin/users");
-
-      const list = res.data.flatMap((user) =>
-        (user.orders || []).map((order) => ({
-          userId: user.id,
-          userName: user.name,
-          userPhone: user.phone,
-          orderId: order.orderId,
-          date: order.date,
-          track: order.track,
-          items: order.items || [],
-          total: order.total,
-          paymentMethod: order.paymentMethod,
-          shippingAddress: order.shippingAddress,
-        }))
-      );
-
-      setOrders(list);
+      setLoading(true);
+      await initAuth();
+      const response = await api.get("/admin/orders");
+      
+      const ordersList = response.data?.data || [];
+      
+      const formattedOrders = ordersList.map((order) => ({
+        id: order.id,
+        orderNumber: order.order_number,
+        userId: order.user_id,
+        userName: order.user?.name || "Unknown",
+        userEmail: order.user?.email || "N/A",
+        userPhone: order.user?.phone || "N/A",
+        date: order.created_at,
+        track: order.track || order.order_status || "Pending",
+        items: order.items || [],
+        total: order.total,
+        paymentMethod: order.payment_method,
+        paymentStatus: order.payment_status,
+        shippingAddress: order.shipping_address,
+      }));
+      
+      setOrders(formattedOrders);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to load orders");
+      console.error("Failed to fetch orders:", err);
+      if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+      } else {
+        toast.error("Failed to load orders");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (!authLoading && admin) {
+      fetchOrders();
+    }
+  }, [authLoading, admin]);
 
-  const updateOrder = async (userId, orderId, newTrack) => {
+  const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      setLoadingId(orderId);
-
-      const res = await api.get(`/admin/users/${userId}`);
-      const user = res.data;
-
-      const updatedOrders = (user.orders || []).map((order) =>
-        order.orderId === orderId
-          ? { ...order, track: newTrack }
-          : order
-      );
-
-      await api.patch(`/admin/users/${userId}`, {
-        orders: updatedOrders,
-      });
-
+      setUpdatingId(orderId);
+      await initAuth();
+      await api.put(`/admin/orders/${orderId}/status`, { status: newStatus });
+      
       setOrders((prev) =>
         prev.map((order) =>
-          order.orderId === orderId
-            ? { ...order, track: newTrack }
+          order.id === orderId
+            ? { ...order, track: newStatus }
             : order
         )
       );
-
-      toast.success("Order status updated");
+      
+      toast.success(`Order ${newStatus} successfully`);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update order");
+      toast.error(err.response?.data?.error || "Failed to update order status");
     } finally {
-      setLoadingId(null);
+      setUpdatingId(null);
     }
   };
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "delivered": return "#2e7d32";
+      case "shipped": return "#1976d2";
+      case "cancelled": return "#d32f2f";
+      default: return "#ed6c02";
+    }
+  };
+
+  if (authLoading) {
+    return (
+      <Layout>
+        <LoadingSpinner message="Verifying access..." />
+      </Layout>
+    );
+  }
+
+  if (!admin) return null;
+
+  if (loading) {
+    return (
+      <Layout>
+        <LoadingSpinner message="Loading orders..." />
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <div className="admin-orders">
-        <h2>All Orders</h2>
+        <h2>All Orders ({orders.length})</h2>
 
         {orders.length === 0 ? (
-          <p>No orders found</p>
+          <div className="no-orders">
+            <p>No orders found</p>
+          </div>
         ) : (
           orders.map((order) => (
-            <div className="order-card" key={`${order.userId}-${order.orderId}`}>
-              <p><b>User:</b> {order.userName}</p>
-              <p><b>Phone:</b> {order.userPhone || "N/A"}</p>
+            <div className="order-card" key={order.id || order.orderNumber}>
+              <div className="order-header">
+                <div className="order-header-left">
+                  <h3>Order #{order.orderNumber}</h3>
+                  <p className="order-date">{new Date(order.date).toLocaleDateString()}</p>
+                </div>
+                <div className="order-header-right">
+                  <span className="order-status-badge" style={{ background: getStatusColor(order.track), color: "white" }}>
+                    {order.track || "Pending"}
+                  </span>
+                </div>
+              </div>
 
-              <p><b>Order ID:</b> #{order.orderId}</p>
-              <p><b>Date:</b> {order.date}</p>
-              <p>
-                <b>Payment:</b>{" "}
-                {order.paymentMethod ? order.paymentMethod.toUpperCase() : "N/A"}
-              </p>
+              <div className="order-user-info">
+                <p><strong>Customer:</strong> {order.userName}</p>
+                <p><strong>Email:</strong> {order.userEmail}</p>
+                <p><strong>Phone:</strong> {order.userPhone}</p>
+              </div>
 
-              <h3 className="ppp">Total: ₹ {order.total}</h3>
-              <label>Status:</label>
-              <select value={order.track} disabled={loadingId === order.orderId}
-                onChange={(e) => updateOrder(order.userId, order.orderId, e.target.value)}>
-                <option>Pending</option>
-                <option>Shipped</option>
-                <option>Delivered</option>
-                <option>Cancelled</option>
-              </select>
+              <div className="order-payment-info">
+                <p><strong>Payment Method:</strong> {order.paymentMethod?.toUpperCase() || "COD"}</p>
+                <p><strong>Payment Status:</strong> 
+                  <span className={`payment-status ${order.paymentStatus}`}>
+                    {order.paymentStatus || "Pending"}
+                  </span>
+                </p>
+              </div>
+
+              <div className="order-total">
+                <strong>Total Amount:</strong> 
+                <span className="total-amount">₹{order.total}</span>
+              </div>
+
+              <div className="order-status-update">
+                <label>Update Status:</label>
+                <select 
+                  value={order.track || "Pending"} 
+                  disabled={updatingId === order.id}
+                  onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                  className="status-select"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Shipped">Shipped</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+                {updatingId === order.id && <span className="loading-small">Updating...</span>}
+              </div>
 
               {order.shippingAddress && (
-                <>
-                  <h4>Delivery Address</h4>
+                <div className="shipping-address">
+                  <h4>📮 Delivery Address</h4>
                   <p>
-                    {order.shippingAddress.address}, <br />
-                    {order.shippingAddress.city},{" "}
-                    {order.shippingAddress.state} -{" "}
-                    {order.shippingAddress.pincode}
+                    {typeof order.shippingAddress === 'string' 
+                      ? order.shippingAddress 
+                      : `${order.shippingAddress.address || order.shippingAddress}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.pincode}`
+                    }
                   </p>
-                </>
+                </div>
               )}
 
-              <h4>Items</h4>
-              {order.items.map((item) => (
-                <p key={item.id}>
-                  ● {item.title} × {item.quantity} — ₹{" "}
-                  {item.price * item.quantity}
-                </p>
-              ))}
+              <div className="order-items">
+                <h4>Items ({order.items?.length || 0})</h4>
+                <div className="items-list">
+                  {(order.items || []).map((item, idx) => (
+                    <div className="order-item" key={idx}>
+                      <img 
+                        src={item.image || item.main_image} 
+                        alt={item.title} 
+                        onError={(e) => e.target.src = "https://via.placeholder.com/50"}
+                      />
+                      <div className="item-details">
+                        <span className="item-title">{item.title}</span>
+                        <span className="item-quantity">Qty: {item.quantity}</span>
+                        <span className="item-price">₹{item.price}</span>
+                      </div>
+                      <span className="item-total">₹{(item.price || 0) * (item.quantity || 0)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           ))
         )}

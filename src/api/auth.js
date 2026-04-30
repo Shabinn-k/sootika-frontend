@@ -1,30 +1,79 @@
-import { api } from "./Axios";
+import { api, initAuth } from "./Axios";
 
 export const authService = {
-  // Test endpoint
-  test: () => api.get("/api/test"),
+  signup: async (userData) => {
+    try {
+      const response = await api.post("/auth/signup", userData);
+      if (response.data?.access_token) {
+        localStorage.setItem("token", response.data.access_token);
+        localStorage.setItem("role", response.data.role || "user");
+        if (response.data.refresh_token) localStorage.setItem("refresh_token", response.data.refresh_token);
+      }
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.error || "Signup failed" };
+    }
+  },
 
-  // Signup
-  signup: (userData) => api.post("/auth/signup", userData),
+  verifyOTP: async (data) => {
+    try {
+      const response = await api.post("/auth/check", data);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.error || "OTP verification failed" };
+    }
+  },
 
-  // Check OTP
-  checkOtp: (data) => api.post("/auth/check", data),
-  
-  // Verify OTP
-  verifyOTP: (data) => api.post("/auth/check", data),
+  resendOTP: async (email) => {
+    try {
+      const response = await api.post("/auth/resend-otp", { email });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.error || "Failed to resend OTP" };
+    }
+  },
 
-  // Resend OTP
-  resendOTP: (email) => api.post("/auth/resend-otp", { email }),
+  login: async (credentials) => {
+    try {
+      const response = await api.post("/auth/login", credentials);
+      const { access_token, refresh_token, role, name, email } = response.data;
+      
+      if (access_token) {
+        localStorage.setItem("token", access_token);
+        localStorage.setItem("refresh_token", refresh_token);
+        localStorage.setItem("role", role);
+      }
+      
+      return { success: true, data: { access_token, refresh_token, role, name, email } };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.error || "Login failed" };
+    }
+  },
 
-  // Login
-  login: (credentials) => api.post("/auth/login", credentials),
+  logout: async () => {
+    try {
+      const refresh_token = localStorage.getItem("refresh_token");
+      if (refresh_token) await api.post("/auth/logout", { refresh_token });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.clear();
+      delete api.defaults.headers.common["Authorization"];
+    }
+    return { success: true };
+  },
 
-  // Refresh Token
-  refreshToken: (data) => api.post("/auth/refresh", data),
-
-  // Logout
-  logout: () => api.post("/auth/logout"),
-
-  // Get user dashboard (Protected)
-  getUserDashboard: () => api.get("/user/dashboard"),
+  getUserDashboard: async () => {
+    try {
+      await initAuth();
+      const response = await api.get("/user/dashboard");
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.error || "Failed to load dashboard",
+        unauthorized: error.response?.status === 401
+      };
+    }
+  }
 };

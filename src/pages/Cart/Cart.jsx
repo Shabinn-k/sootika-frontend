@@ -7,30 +7,39 @@ import "./Cart.css";
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { cartItems, addToCart, removeCart } = useContext(CartContext);
-  const { user, loading } = useAuth();
- 
-useEffect(() => {
-  if (!loading && !user) {
-    toast.warn("Please login to view cart");
-    navigate("/");
+  const { cartItems, addToCart, removeCart, loading: cartLoading } = useContext(CartContext);
+  const { user, loading: authLoading } = useAuth();
+
+  // ⚠️ FIX: Redirect only after auth loads
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.warn("Please login to view cart");
+      navigate("/");
+    }
+  }, [user, authLoading, navigate]);
+
+  // ⚠️ FIX: Show loading states
+  if (authLoading || cartLoading) {
+    return (
+      <div className="cart-page">
+        <div className="loading-spinner">Loading cart...</div>
+      </div>
+    );
   }
-}, [user, loading, navigate]);
 
-if (loading) return <div>Loading...</div>;
-if (!user) return null;
+  if (!user) return null;
 
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+  const subtotal = (cartItems || []).reduce(
+    (acc, item) => acc + (item.price * (item.quantity || 1)),
     0
   );
 
-  const shipping = cartItems.length > 0 ? 80 : 0;
+  const shipping = (cartItems?.length || 0) > 0 ? 80 : 0;
   const total = subtotal + shipping;
 
   return (
     <div className="cart-page">
-      {cartItems.length === 0 ? (
+      {(cartItems?.length || 0) === 0 ? (
         <div className="empty-msg-container">
           <h2 className="empty-msg">Your cart is empty</h2>
           <button className="home-btn" onClick={() => navigate("/")}>
@@ -42,7 +51,7 @@ if (!user) return null;
           <h1 className="cart-title">Your Cart Items</h1>
 
           {cartItems.map((item) => (
-            <div key={item.id} className="cart-card">
+            <div key={item.id || item.product_id} className="cart-card">
               <img 
                 src={item.main_image || item.image} 
                 alt={item.title} 
@@ -67,7 +76,7 @@ if (!user) return null;
                 >
                   −
                 </button>
-                <span>{item.quantity}</span>
+                <span>{item.quantity || 1}</span>
                 <button
                   onClick={() =>
                     addToCart({ ...item, quantity: 1 })
@@ -79,7 +88,7 @@ if (!user) return null;
 
               <button
                 className="remove-btn"
-                onClick={() => removeCart(item.id)}
+                onClick={() => removeCart(item.id || item.product_id)}
               >
                 Remove
               </button>

@@ -1,16 +1,23 @@
-// api/products.js
 import { api } from "./Axios";
 
 export const productService = {
   getAllProducts: async () => {
     const res = await api.get("/products/");
-    // Backend returns: { data: products, count }
-    return { data: res.data.data || [] };
+    return { data: res.data?.data || [] };
   },
 
-  getProductById: (id) => api.get(`/products/${id}`),
+  getProductById: async (id) => {
+    const res = await api.get(`/products/${id}`);
+    return { data: res.data };
+  },
 
-  searchProducts: (query) => api.get("/products/search", { params: { q: query } }),
+  searchProducts: async (query) => {
+    const res = await api.get("/products/search", { params: { q: query } });
+    return { data: res.data?.data || [] };
+  },
 
-  getInStockProducts: () => api.get("/products/in-stock"),
+  getInStockProducts: async () => {
+    const res = await api.get("/products/in-stock");
+    return { data: res.data?.data || [] };
+  }
 };

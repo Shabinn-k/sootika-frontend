@@ -21,7 +21,7 @@ const Feedback = ({ setShowLogin }) => {
           (item) => item.feed === "approved"
         );
         setFeedbacks(approved);
-      } catch (err) {
+      } catch {
         toast.error("Failed to load reviews");
       } finally {
         setLoading(false);

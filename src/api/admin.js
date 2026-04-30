@@ -1,30 +1,170 @@
-import { api } from "./Axios";
+import { api, initAuth } from "./Axios";
 
 export const adminService = {
   // Admin dashboard
-  getDashboard: () => api.get("/admin/dashboard"),
+  getDashboard: async () => {
+    try {
+      await initAuth(); // ⚠️ CRITICAL FIX
+      const response = await api.get("/admin/dashboard");
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Get dashboard error:", error);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || "Failed to load dashboard" 
+      };
+    }
+  },
 
   // Users
-  getAllUsers: () => api.get("/admin/users"),
-  getUserById: (id) => api.get(`/admin/users/${id}`),
-  updateUserRole: (id, roleData) => api.put(`/admin/users/${id}/role`, roleData),
-  toggleUserBlock: (id) => api.put(`/admin/users/${id}/toggle-block`),
-  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  getAllUsers: async () => {
+    try {
+      await initAuth();
+      const response = await api.get("/admin/users");
+      return { success: true, data: response.data?.data || response.data || [] };
+    } catch (error) {
+      console.error("Get users error:", error);
+      return { success: false, data: [], error: error.response?.data?.message };
+    }
+  },
+
+  getUserById: async (id) => {
+    try {
+      await initAuth();
+      const response = await api.get(`/admin/users/${id}`);
+      return { success: true, data: response.data?.data || response.data };
+    } catch (error) {
+      console.error("Get user error:", error);
+      return { success: false, error: error.response?.data?.message };
+    }
+  },
+
+  updateUserRole: async (id, roleData) => {
+    try {
+      await initAuth();
+      const response = await api.put(`/admin/users/${id}/role`, roleData);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Update role error:", error);
+      return { success: false, error: error.response?.data?.message };
+    }
+  },
+
+  toggleUserBlock: async (id) => {
+    try {
+      await initAuth();
+      const response = await api.put(`/admin/users/${id}/toggle-block`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Toggle block error:", error);
+      return { success: false, error: error.response?.data?.message };
+    }
+  },
+
+  deleteUser: async (id) => {
+    try {
+      await initAuth();
+      const response = await api.delete(`/admin/users/${id}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Delete user error:", error);
+      return { success: false, error: error.response?.data?.message };
+    }
+  },
 
   // Stats
-  getProductStats: () => api.get("/admin/stats/products"),
+  getProductStats: async () => {
+    try {
+      await initAuth();
+      const response = await api.get("/admin/stats/products");
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Get product stats error:", error);
+      return { success: false, error: error.response?.data?.message };
+    }
+  },
 
   // Products Management
-  createProduct: (productData) => api.post("/admin/products", productData),
-  updateProduct: (id, productData) => api.put(`/admin/products/${id}`, productData),
-  updateProductImage: (id, type, imageData) => 
-    api.put(`/admin/products/${id}/image/${type}`, imageData, {
-      headers: { "Content-Type": "multipart/form-data" }
-    }),
-  deleteProduct: (id) => api.delete(`/admin/products/${id}`),
+  createProduct: async (productData) => {
+    try {
+      await initAuth();
+      const response = await api.post("/admin/products", productData);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Create product error:", error);
+      return { success: false, error: error.response?.data?.message };
+    }
+  },
+
+  updateProduct: async (id, productData) => {
+    try {
+      await initAuth();
+      const response = await api.put(`/admin/products/${id}`, productData);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Update product error:", error);
+      return { success: false, error: error.response?.data?.message };
+    }
+  },
+
+  updateProductImage: async (id, type, imageData) => {
+    try {
+      await initAuth();
+      // ⚠️ CRITICAL FIX: Let axios interceptor handle headers but don't override
+      const response = await api.put(`/admin/products/${id}/image/${type}`, imageData, {
+        headers: { 
+          "Content-Type": "multipart/form-data" 
+        }
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Update product image error:", error);
+      return { success: false, error: error.response?.data?.message };
+    }
+  },
+
+  deleteProduct: async (id) => {
+    try {
+      await initAuth();
+      const response = await api.delete(`/admin/products/${id}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Delete product error:", error);
+      return { success: false, error: error.response?.data?.message };
+    }
+  },
 
   // Feedbacks
-  getFeedbacks: () => api.get('/admin/feedbacks'),
-  approveFeedback: (id) => api.put(`/admin/feedbacks/${id}/approve`),
-  deleteFeedback: (id) => api.delete(`/admin/feedbacks/${id}`),
+  getFeedbacks: async () => {
+    try {
+      await initAuth();
+      const response = await api.get('/admin/feedbacks');
+      return { success: true, data: response.data?.data || response.data || [] };
+    } catch (error) {
+      console.error("Get feedbacks error:", error);
+      return { success: false, data: [], error: error.response?.data?.message };
+    }
+  },
+
+  approveFeedback: async (id) => {
+    try {
+      await initAuth();
+      const response = await api.put(`/admin/feedbacks/${id}/approve`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Approve feedback error:", error);
+      return { success: false, error: error.response?.data?.message };
+    }
+  },
+
+  deleteFeedback: async (id) => {
+    try {
+      await initAuth();
+      const response = await api.delete(`/admin/feedbacks/${id}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Delete feedback error:", error);
+      return { success: false, error: error.response?.data?.message };
+    }
+  },
 };

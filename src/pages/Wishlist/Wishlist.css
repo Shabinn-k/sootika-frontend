@@ -21,7 +21,25 @@
   font-size: 26px;
   margin-bottom: 20px;
 }
+/* Loading spinner */
+.loading-spinner {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #6d4c2f;
+}
 
+/* Stock badge for wishlist */
+.stock.out {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fdecea;
+  color: #c62828;
+  margin-top: 6px;
+}
 /* =========================
    COMMON HOME BUTTON
 ========================= */

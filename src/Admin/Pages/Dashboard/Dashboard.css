@@ -10,7 +10,13 @@
   color: #5a4634;
   margin-bottom: 25px;
 }
-
+/* Loading spinner */
+.loading-spinner {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #6d4c2f;
+}
 .dash-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));

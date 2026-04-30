@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 
 const TopSelling = ({ setShowLogin }) => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const { addToCart, addToWish } = useContext(CartContext);
@@ -18,36 +18,68 @@ const TopSelling = ({ setShowLogin }) => {
     useEffect(() => {
         productService.getAllProducts()
             .then(res => {
-                setProducts(res.data || []);
+                const allProducts = res.data || [];
+                // ⚠️ ONLY SHOW FIRST 8 PRODUCTS
+                setProducts(allProducts.slice(0, 8));
                 setLoading(false);
             })
             .catch(err => {
-                console.log("Failed to load products:", err);
+                console.error("Failed to load products:", err);
                 setLoading(false);
             });
     }, []);
 
-    const handleCart = () => {
+    const handleAddToCart = async (item) => {
         if (!user) {
             setShowLogin(true);
-            toast.warn("Please login to view Cart!");
-            return false;
+            toast.warn("Please login to add items to Cart!");
+            return;
         }
-        return true;
+
+        const isOutOfStock = item.stock === false || item.stock === 0;
+        if (isOutOfStock) {
+            toast.error("Product is out of stock!");
+            return;
+        }
+
+        try {
+            await addToCart(item);
+            toast.success("Added to cart");
+        } catch {
+            toast.error("Failed to add to cart");
+        }
     };
 
-    const handleWish = () => {
+    const handleAddToWish = async (item) => {
         if (!user) {
             setShowLogin(true);
-            toast.warn("Please login to view Wishlist!");
-            return false;
+            toast.warn("Please login to add items to Wishlist!");
+            return;
         }
-        return true;
+
+        const isOutOfStock = item.stock === false || item.stock === 0;
+        if (isOutOfStock) {
+            toast.error("Cannot add out of stock items to wishlist");
+            return;
+        }
+
+        try {
+            await addToWish(item);
+            toast.success("Added to wishlist");
+        } catch {
+            toast.error("Failed to add to wishlist");
+        }
     };
 
-    if (loading) {
+    if (loading || authLoading) {
         return <div className="loading">Loading products...</div>;
     }
+
+    const isProductOutOfStock = (item) => item.stock === false || item.stock === 0;
+    
+    // ⚠️ Split first 4 and next 4
+    const firstGroup = products.slice(0, 4);
+    const secondGroup = products.slice(4, 8);
 
     return (
         <div>
@@ -55,52 +87,70 @@ const TopSelling = ({ setShowLogin }) => {
             <h1>Our New Collections :-</h1>
 
             <div className="group-1">
-                {products.slice(0, 4).map((item) => (
-                    <div key={item.id} className="card">
-                        <div className="card-img-box">
-                            <img 
-                                src={item.main_image || item.image} 
-                                alt={item.title} 
-                                onClick={() => navigate(`/detail/${item.id}`)} 
-                            />
+                {firstGroup.map((item) => {
+                    const outOfStock = isProductOutOfStock(item);
+                    
+                    return (
+                        <div key={item.id} className="card">
+                            <div className="card-img-box">
+                                <img 
+                                    src={item.main_image || item.image} 
+                                    alt={item.title} 
+                                    onClick={() => navigate(`/detail/${item.id}`)} 
+                                />
+                            </div>
+                            <h3>{item.title}</h3>
+                            <div className="card-icons">
+                                <FaHeart 
+                                    className={`wish-icon ${outOfStock ? "disabled" : ""}`}
+                                    onClick={() => !outOfStock && handleAddToWish(item)} 
+                                />
+                                <FaShoppingCart 
+                                    className={`cart-icon ${outOfStock ? "disabled" : ""}`}
+                                    onClick={() => !outOfStock && handleAddToCart(item)} 
+                                />
+                            </div>
+                            <h2>{item.name}</h2>
+                            <span>₹ {item.price}</span>
+                            {outOfStock && <p className="stock-badge out">Out of Stock</p>}
                         </div>
-                        <h3>{item.title}</h3>
-                        <div className="card-icons">
-                            <FaHeart className="wish-icon"
-                                onClick={() => { if (handleWish()) addToWish(item); }} />
-                            <FaShoppingCart className="cart-icon"
-                                onClick={() => { if (handleCart()) addToCart(item); }} />
-                        </div>
-                        <h2>{item.name}</h2>
-                        <span>₹ {item.price}</span>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             <div className="group-2">
-                {products.slice(4, 8).map((item) => (
-                    <div key={item.id} className="card">
-                        <div className="card-img-box">
-                            <img 
-                                src={item.main_image || item.image} 
-                                alt={item.title} 
-                                onClick={() => navigate(`/detail/${item.id}`)} 
-                            />
+                {secondGroup.map((item) => {
+                    const outOfStock = isProductOutOfStock(item);
+                    
+                    return (
+                        <div key={item.id} className="card">
+                            <div className="card-img-box">
+                                <img 
+                                    src={item.main_image || item.image} 
+                                    alt={item.title} 
+                                    onClick={() => navigate(`/detail/${item.id}`)} 
+                                />
+                            </div>
+                            <h3>{item.title}</h3>
+                            <div className="card-icons">
+                                <FaHeart 
+                                    className={`wish-icon ${outOfStock ? "disabled" : ""}`}
+                                    onClick={() => !outOfStock && handleAddToWish(item)} 
+                                />
+                                <FaShoppingCart 
+                                    className={`cart-icon ${outOfStock ? "disabled" : ""}`}
+                                    onClick={() => !outOfStock && handleAddToCart(item)} 
+                                />
+                            </div>
+                            <h2>{item.name}</h2>
+                            <span>₹ {item.price}</span>
+                            {outOfStock && <p className="stock-badge out">Out of Stock</p>}
                         </div>
-                        <h3>{item.title}</h3>
-                        <div className="card-icons">
-                            <FaHeart className="wish-icon"
-                                onClick={() => { if (handleWish()) addToWish(item); }} />
-                            <FaShoppingCart className="cart-icon"
-                                onClick={() => { if (handleCart()) addToCart(item); }} />
-                        </div>
-                        <h2>{item.name}</h2>
-                        <span>₹ {item.price}</span>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
-    )
+    );
 }
 
 export default TopSelling;

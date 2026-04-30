@@ -15,7 +15,13 @@
   text-align: center;
   margin-top: 80px;
 }
-
+/* Add to Cart.css */
+.loading-spinner {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #6d4c2f;
+}
 .empty-msg {
   color: #6d4c2f;
   font-size: 26px;

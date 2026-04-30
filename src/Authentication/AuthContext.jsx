@@ -1,6 +1,5 @@
-// src/Authentication/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
-import { api } from "../api/Axios";
+import { api, initAuth } from "../api/Axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -8,126 +7,145 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  // ✅ Restore from localStorage IMMEDIATELY
-  const [user, setUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  const [admin, setAdmin] = useState(() => {
-    try {
-      const stored = localStorage.getItem("admin");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  // ✅ Start loading as FALSE because we already have data from localStorage
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [admin, setAdmin] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // ✅ Just validate token in background, don't block rendering
+  // Check auth on mount
   useEffect(() => {
-    const validate = async () => {
+    const checkAuth = async () => {
       const token = localStorage.getItem("token");
       const role = localStorage.getItem("role");
 
       if (!token) {
-        setUser(null);
-        setAdmin(null);
+        setLoading(false);
         return;
       }
 
       try {
-        const res = await api.get("/user/dashboard");
-        const data = res.data;
+        await initAuth();
+        let response;
+        try {
+          response = await api.get("/user/dashboard");
+        } catch (err) {
+          if (role === "admin") {
+            response = await api.get("/admin/dashboard");
+          } else {
+            throw err;
+          }
+        }
 
         if (role === "admin") {
           const adminData = {
-            id: data.admin_id || data.user_id,
-            name: data.name || "Admin",
+            id: response.data?.id || response.data?.admin_id,
+            name: response.data?.name || "Admin",
+            email: response.data?.email,
             role: "admin",
           };
           setAdmin(adminData);
           setUser(null);
           localStorage.setItem("admin", JSON.stringify(adminData));
-          localStorage.removeItem("user");
         } else {
           const userData = {
-            id: data.user_id,
-            name: data.name,
+            id: response.data?.id || response.data?.user_id,
+            name: response.data?.name,
+            email: response.data?.email,
             role: "user",
           };
           setUser(userData);
           setAdmin(null);
           localStorage.setItem("user", JSON.stringify(userData));
-          localStorage.removeItem("admin");
         }
       } catch (err) {
-        console.error("Auth validate failed:", err);
-        if (err.response?.status === 401) {
-          localStorage.clear();
-          setUser(null);
-          setAdmin(null);
-        }
+        console.error("Auth check failed:", err);
+        localStorage.clear();
+        setUser(null);
+        setAdmin(null);
+      } finally {
+        setLoading(false);
       }
     };
 
-    validate();
+    checkAuth();
   }, []);
 
-  // Handle forced logout (from Axios 401 refresh fail)
   useEffect(() => {
     const handleUnauthorized = () => {
+      localStorage.clear();
+      setUser(null);
+      setAdmin(null);
       toast.error("Session expired. Please login again.");
-      logoutUser();
       navigate("/");
     };
     window.addEventListener("unauthorized", handleUnauthorized);
     return () => window.removeEventListener("unauthorized", handleUnauthorized);
-  }, []);
+  }, [navigate]);
 
-  // 🔐 LOGIN
   const login = async (email, password) => {
+  try {
+    const res = await api.post("/auth/login", { 
+      email: email.trim(), 
+      password: password 
+    });
+    
+    console.log("Login success:", res.data);
+    
+    const { access_token, refresh_token, role, name } = res.data;
+    
+    if (!access_token) {
+      throw new Error("No token received");
+    }
+    
+    localStorage.setItem("token", access_token);
+    localStorage.setItem("refresh_token", refresh_token);
+    localStorage.setItem("role", role);
+    
+    if (role === "admin") {
+      const adminData = { id: email, name: name || "Admin", email: email, role: "admin" };
+      setAdmin(adminData);
+      setUser(null);
+      localStorage.setItem("admin", JSON.stringify(adminData));
+      localStorage.removeItem("user");
+      toast.success("Admin Login Successful!");
+      navigate("/admin/dashboard");
+    } else {
+      const userData = { id: email, name: name || "", email: email, role: "user" };
+      setUser(userData);
+      setAdmin(null);
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.removeItem("admin");
+      toast.success("Login Successful!");
+      setShowLogin(false); 
+      navigate("/");
+    }
+    return true;
+    
+  } catch (err) {
+    console.error("Login error:", err.response?.data);
+    toast.error(err.response?.data?.error || "Login failed");
+    return false;
+  }
+};
+
+  const signup = async (userData) => {
     try {
-      const res = await api.post("/auth/login", { email, password });
-      const { access_token, refresh_token, role } = res.data;
-
-      localStorage.setItem("token", access_token);
-      localStorage.setItem("refresh_token", refresh_token);
-      localStorage.setItem("role", role);
-
-      if (role === "admin") {
-        const adminData = { id: email, email, role: "admin" };
-        setAdmin(adminData);
-        setUser(null);
-        localStorage.setItem("admin", JSON.stringify(adminData));
-        localStorage.removeItem("user");
-        toast.success("Admin Login Successful!");
-        navigate("/admin/dashboard");
-      } else {
-        const userData = { id: email, email, role: "user" };
-        setUser(userData);
-        setAdmin(null);
-        localStorage.setItem("user", JSON.stringify(userData));
-        localStorage.removeItem("admin");
-        toast.success("Login Successful!");
-        navigate("/");
-      }
-
-      return true;
+      const response = await api.post("/auth/signup", {
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone || userData.number,
+        password: userData.password
+      });
+      
+      toast.success("Signup successful! Please check your email for OTP.");
+      return { success: true, email: userData.email };
     } catch (err) {
-      toast.error(err.response?.data?.error || "Login failed");
-      return false;
+      console.error("Signup error:", err.response?.data);
+      toast.error(err.response?.data?.message || err.response?.data?.error || "Signup failed!");
+      return { success: false };
     }
   };
 
-  // 🔓 LOGOUT
   const logoutUser = async () => {
     try {
       const refresh_token = localStorage.getItem("refresh_token");
@@ -135,20 +153,28 @@ export const AuthProvider = ({ children }) => {
         await api.post("/auth/logout", { refresh_token });
       }
     } catch (e) {
-      console.error(e);
+      console.error("Logout error:", e);
     } finally {
       localStorage.clear();
       setUser(null);
       setAdmin(null);
-      navigate("/");
+      delete api.defaults.headers.common["Authorization"];
       toast.info("Logged out");
+      navigate("/");
     }
   };
 
-  // ✅ Remove loading check - render immediately with restored state
   return (
-    <AuthContext.Provider
-      value={{ user, admin, loading, login, logoutUser, setUser }}
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        admin, 
+        loading,
+        login, 
+        logoutUser, 
+        signup, 
+        setUser 
+      }}
     >
       {children}
     </AuthContext.Provider>

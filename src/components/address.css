@@ -1,0 +1,200 @@
+/* AddressModal.css - Add these styles */
+
+/* Close button */
+.modal-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #a3845f;
+}
+
+.modal-close-btn:hover {
+  color: #6d4c2f;
+}
+
+/* Error styling */
+input.error, 
+textarea.error {
+  border-color: #c62828 !important;
+  background-color: #fff5f5 !important;
+}
+
+.error-text {
+  color: #c62828;
+  font-size: 11px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Checkbox label */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  cursor: pointer;
+}
+
+/* Modal buttons */
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.cancel-btn {
+  flex: 1;
+  padding: 10px;
+  background: #f0e4d3;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #5a4634;
+}
+
+.save-btn {
+  flex: 1;
+  padding: 10px;
+  background: #c9a47a;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  font-weight: 600;
+}
+
+.save-btn:disabled {
+  background: #ddd;
+  cursor: not-allowed;
+}
+
+/* Modal position relative for close button */
+.address-modal {
+  position: relative;
+}
+/* Loading state */
+.banner-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5ede3;
+  border-radius: 20px;
+  z-index: 10;
+}
+
+.loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e6d5bd;
+  border-top-color: #c9a47a;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Navigation dots */
+.banner-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 5;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.dot.active {
+  background: #c9a47a;
+  width: 24px;
+  border-radius: 5px;
+}
+
+.dot:hover {
+  background: #c9a47a;
+  transform: scale(1.2);
+}
+
+/* Arrow buttons */
+.banner-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  border: none;
+  font-size: 24px;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  z-index: 5;
+}
+
+.banner-arrow:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.banner-arrow.prev {
+  left: 20px;
+}
+
+.banner-arrow.next {
+  right: 20px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .banner-arrow {
+    font-size: 18px;
+    padding: 6px 12px;
+  }
+  
+  .banner-arrow.prev {
+    left: 10px;
+  }
+  
+  .banner-arrow.next {
+    right: 10px;
+  }
+  
+  .dot {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .dot.active {
+    width: 18px;
+  }
+}
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .banner-slide {
+    transition: none;
+  }
+  
+  .banner-arrow:hover {
+    transform: translateY(-50%);
+  }
+}

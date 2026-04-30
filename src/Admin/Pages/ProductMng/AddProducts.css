@@ -19,7 +19,32 @@
 .form-group {
   margin-bottom: 18px;
 }
+.image-preview {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 10px;
+  border: 1px solid #e6d5bd;
+}
 
+.loading-spinner {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #6d4c2f;
+}
+
+.form-group input:disabled,
+.form-group textarea:disabled {
+  background: #f0e8dd;
+  cursor: not-allowed;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .form-group label {
   display: block;
   font-size: 14px;
