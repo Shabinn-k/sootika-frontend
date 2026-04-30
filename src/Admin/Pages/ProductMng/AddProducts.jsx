@@ -9,19 +9,16 @@ const AddProduct = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // Text fields state
   const [title, setTitle] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [stockQuantity, setStockQuantity] = useState(10);
 
-  // File objects state
   const [mainImage, setMainImage] = useState(null);
   const [secondImage, setSecondImage] = useState(null);
   const [thirdImage, setThirdImage] = useState(null);
 
-  // File previews state
   const [mainPreview, setMainPreview] = useState(null);
   const [secondPreview, setSecondPreview] = useState(null);
   const [thirdPreview, setThirdPreview] = useState(null);
@@ -35,7 +32,6 @@ const AddProduct = () => {
   };
 
   const addProduct = async () => {
-    // Basic validation
     if (!title || !name || !mainImage || !price || Number(price) <= 0) {
       toast.error("Please fill all required fields (Title, Name, Price, Main Image)");
       return;
@@ -77,98 +73,64 @@ const AddProduct = () => {
 
         <div className="form-group">
           <label>Product Title *</label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Beautiful Saree"
-          />
+          <input value={title}
+            onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Beautiful Saree"/>
         </div>
 
         <div className="form-group">
           <label>Product Name *</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Silk Saree"
-          />
+          <input value={name}
+            onChange={(e) => setName(e.target.value)} placeholder="e.g. Silk Saree"/>
         </div>
 
         <div className="form-group">
           <label>Description</label>
-          <textarea
-            rows="3"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Product details..."
-          />
+          <textarea rows="3" value={description}
+            onChange={(e) => setDescription(e.target.value)} placeholder="Product details..." />
         </div>
 
         <div className="form-group">
           <label>Price *</label>
-          <input
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="e.g. 500"
-          />
+          <input type="number" value={price}
+            onChange={(e) => setPrice(e.target.value)} placeholder="e.g. 500" />
         </div>
 
         <div className="form-group">
           <label>Stock Quantity</label>
-          <input
-            type="number"
-            value={stockQuantity}
+          <input type="number" value={stockQuantity}
             onChange={(e) => setStockQuantity(Number(e.target.value))}
-            placeholder="e.g. 10"
-            min="0"
-          />
+            placeholder="e.g. 10" min="0"/>
         </div>
 
         <div className="form-group">
           <label>Main Image *</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleImageChange(e, setMainImage, setMainPreview)}
-          />
+          <input type="file" accept="image/*"
+            onChange={(e) => handleImageChange(e, setMainImage, setMainPreview)}/>
           {mainPreview && <img src={mainPreview} alt="Main Preview" className="image-preview" />}
         </div>
 
         <div className="form-group">
           <label>Second Image</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleImageChange(e, setSecondImage, setSecondPreview)}
-          />
+          <input type="file" accept="image/*"
+            onChange={(e) => handleImageChange(e, setSecondImage, setSecondPreview)}/>
           {secondPreview && <img src={secondPreview} alt="Second Preview" className="image-preview" />}
         </div>
 
         <div className="form-group">
           <label>Third Image</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleImageChange(e, setThirdImage, setThirdPreview)}
-          />
+          <input type="file" accept="image/*"
+            onChange={(e) => handleImageChange(e, setThirdImage, setThirdPreview)} />
           {thirdPreview && <img src={thirdPreview} alt="Third Preview" className="image-preview" />}
         </div>
 
         <div className="form-actions">
-          <button
-            type="button"
-            className="save-btn"
-            disabled={loading}
-            onClick={addProduct}
-          >
+          <button type="button" className="save-btn"
+            disabled={loading} onClick={addProduct}>
             {loading ? "Uploading..." : "Save Product"}
           </button>
 
-          <button
-            type="button"
-            className="cancel-btn"
-            onClick={() => navigate("/admin/products")}
-          >
+          <button type="button" className="cancel-btn"
+            onClick={() => navigate("/admin/products")}>
             Cancel
           </button>
         </div>

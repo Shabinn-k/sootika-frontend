@@ -1,11 +1,9 @@
-/* Page wrapper */
 .admin-products {
   padding: 25px;
   font-family: "Poppins", sans-serif;
   color: #4b3a26;
 }
 
-/* Heading */
 .admin-products h2 {
   font-size: 26px;
   font-weight: 700;
@@ -13,7 +11,6 @@
   color: #4b3a26;
 }
 
-/* Add button */
 .add-product-btn {
   background: #c9a47a;
   color: #fff;
@@ -30,7 +27,6 @@
   background: #b58c64;
 }
 
-/* Table */
 .product-table {
   width: 100%;
   margin-top: 25px;
@@ -41,7 +37,6 @@
   box-shadow: 0 6px 18px rgba(201, 164, 122, 0.25);
 }
 
-/* Table head */
 .product-table thead {
   background: #efe2d1;
 }
@@ -54,7 +49,6 @@
   color: #4b3a26;
 }
 
-/* Table body */
 .product-table td {
   padding: 14px;
   font-size: 14px;
@@ -62,12 +56,10 @@
   border-bottom: 1px solid #e6d5bd;
 }
 
-/* Row hover */
 .product-table tbody tr:hover {
   background: #faf3e8;
 }
 
-/* Stock */
 .stock-in {
   color: #2e7d32;
   font-weight: 600;
@@ -78,7 +70,6 @@
   font-weight: 600;
 }
 
-/* Action buttons */
 .action-btns {
   display: flex;
   gap: 8px;
@@ -94,7 +85,6 @@
   transition: 0.25s ease;
 }
 
-/* View */
 .view-btn {
   background: #e6d5bd;
   color: #4b3a26;
@@ -104,7 +94,6 @@
   background: #d9c3a4;
 }
 
-/* Edit */
 .edit-btn {
   background: #c9a47a;
   color: white;
@@ -114,7 +103,6 @@
   background: #b58c64;
 }
 
-/* Delete */
 .delete-btn {
   background: #f3d1c8;
   color: #8b2c2c;
@@ -123,7 +111,7 @@
 .delete-btn:hover {
   background: #e7b5a9;
 }
-/* Header layout */
+
 .admin-header {
   display: flex;
   justify-content: space-between;
@@ -131,7 +119,6 @@
   margin-bottom: 15px;
 }
 
-/* Search bar */
 .admin-search {
   width: 100%;
   padding: 12px 15px;
@@ -149,7 +136,6 @@
   box-shadow: 0 0 6px rgba(201, 164, 122, 0.4);
 }
 
-/* No data */
 .no-data {
   text-align: center;
   padding: 20px;
@@ -157,7 +143,6 @@
   color: #a39a8c;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .product-table thead {
     display: none;

@@ -15,7 +15,7 @@ export const adminService = {
   getProductStats: () => api.get("/admin/stats/products"),
 
   // Products Management
-  createProduct: (productData) => api.post("/admin/products/", productData),
+  createProduct: (productData) => api.post("/admin/products", productData),
   updateProduct: (id, productData) => api.put(`/admin/products/${id}`, productData),
   updateProductImage: (id, type, imageData) => 
     api.put(`/admin/products/${id}/image/${type}`, imageData, {

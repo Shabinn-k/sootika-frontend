@@ -3,8 +3,6 @@
   height: 100vh;
   background: #f7efe5;
 }
-
-/* ================= SIDEBAR ================= */
 .admin-sidebar {
   width: 240px;
   background: #fff7ec;
@@ -26,8 +24,6 @@
   margin-bottom: 30px;
   color: #4b3b2b;
 }
-
-/* ================= MENU ================= */
 .admin-menu {
   list-style: none;
   padding: 0;
@@ -48,8 +44,6 @@
   display: inline-block;
   font-weight: 500;
 }
-
-/* DOUBLE LINE EFFECT */
 .link-items1::before,
 .link-items1::after {
   content: "";
@@ -83,8 +77,6 @@
 .link-items1.active::after {
   transform: scaleX(1);
 }
-
-/* ================= LOGOUT ================= */
 .logout-wrapper {
   margin-top: auto;
 }
@@ -108,8 +100,6 @@
   color: white;
   background-color: #d23838;
 }
-
-/* ================= CONTENT ================= */
 .admin-content {
   flex: 1;
   display: flex;
@@ -120,13 +110,10 @@
   padding: 25px;
   overflow-y: auto;
 }
-
-/* ================= RESPONSIVE ================= */
 @media (max-width: 768px) {
   .admin-sidebar {
     width: 200px;
   }
-
   .link-items1,
   .logout {
     font-size: 15px;

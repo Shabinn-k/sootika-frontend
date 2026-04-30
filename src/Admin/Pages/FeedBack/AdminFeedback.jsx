@@ -8,9 +8,6 @@ const AdminFeedback = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* =====================
-     FETCH FEEDBACKS
-  ===================== */
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
@@ -26,9 +23,6 @@ const AdminFeedback = () => {
     fetchFeedbacks();
   }, []);
 
-  /* =====================
-     APPROVE FEEDBACK
-  ===================== */
   const approve = async (id) => {
     try {
       await adminService.approveFeedback(id);
@@ -45,9 +39,6 @@ const AdminFeedback = () => {
     }
   };
 
-  /* =====================
-     DELETE FEEDBACK
-  ===================== */
   const deleteFeed = async (id) => {
     const sure = window.confirm("Are you sure you want to delete this feedback?");
     if (!sure) return;
@@ -87,20 +78,14 @@ const AdminFeedback = () => {
                 <tr key={item.ID}>
                   <td>{item.name}</td>
                   <td>{item.review}</td>
-                  <td>{"★".repeat(item.rating)}{"☆".repeat(5-item.rating)}</td>
+                  <td>{"★".repeat(item.rating)}{"☆".repeat(5 - item.rating)}</td>
                   <td>
-                    <button
-                      className="ys-btn"
-                      onClick={() => approve(item.ID)}
-                      disabled={item.feed === "approved"}
-                    >
+                    <button className="ys-btn" onClick={() => approve(item.ID)}
+                      disabled={item.feed === "approved"}>
                       {item.feed === "approved" ? "Approved" : "Approve"}
                     </button>
 
-                    <button
-                      className="dlt-btn"
-                      onClick={() => deleteFeed(item.ID)}
-                    >
+                    <button className="dlt-btn" onClick={() => deleteFeed(item.ID)}>
                       Delete
                     </button>
                   </td>

@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { CartContext } from "../../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Authentication/AuthContext";
@@ -8,17 +8,17 @@ import "./Wishlist.css";
 const Wishlist = () => {
   const navigate = useNavigate();
   const { wishItems, removeWish, addToCart } = useContext(CartContext);
-  const { user } = useAuth();
+ const { user, loading } = useAuth();
 
-  // 🔒 Guard route (side-effect safe)
-  useEffect(() => {
-    if (!user) {
-      toast.warn("Please login to view wishlist");
-      navigate("/");
-    }
-  }, [user, navigate]);
+useEffect(() => {
+  if (!loading && !user) {
+    toast.warn("Please login to view wishlist");
+    navigate("/");
+  }
+}, [user, loading, navigate]);
 
-  if (!user) return null;
+if (loading) return <div>Loading...</div>;
+if (!user) return null;
 
   const handleMoveToCart = async (item) => {
     try {
@@ -45,7 +45,14 @@ const Wishlist = () => {
 
           {wishItems.map((item) => (
             <div className="wish-card" key={item.id}>
-              <img src={item.image} alt={item.title} width={150} />
+              <img 
+                src={item.main_image || item.image} 
+                alt={item.title} 
+                width={150}
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/150";
+                }}
+              />
 
               <div className="wish-info">
                 <h3>{item.title}</h3>
@@ -60,7 +67,6 @@ const Wishlist = () => {
                 >
                   Add to Cart
                 </button>
-
                 <button
                   className="remove-btn"
                   onClick={() => removeWish(item.id)}
@@ -70,7 +76,6 @@ const Wishlist = () => {
               </div>
             </div>
           ))}
-
           <button className="home-btn" onClick={() => navigate("/")}>
             Continue Shopping
           </button>

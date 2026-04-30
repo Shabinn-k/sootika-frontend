@@ -17,15 +17,12 @@ const Detail = () => {
   const [quant, setQuant] = useState(1);
   const [mainImg, setMainImg] = useState("");
 
-  /* =====================
-     FETCH PRODUCT
-  ===================== */
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const res = await api.get(`/products/${id}`);
         setProduct(res.data);
-        setMainImg(res.data.image);
+        setMainImg(res.data.main_image || res.data.image);
       } catch (err) {
         console.error("Failed to load product:", err);
         toast.error("Failed to load product");
@@ -36,20 +33,15 @@ const Detail = () => {
     fetchProduct();
   }, [id, navigate]);
 
-  /* =====================
-     HANDLERS
-  ===================== */
   const handlePay = () => {
     if (!user) {
       toast.warn("Please login to continue!");
       return;
     }
-
     if (product.stock === false) {
       toast.error("Product is out of stock");
       return;
     }
-
     navigate("/payment", { state: { product, quant } });
   };
 
@@ -58,19 +50,14 @@ const Detail = () => {
       toast.warn("Please login to continue!");
       return;
     }
-
     if (product.stock === false) {
       toast.error("Product is out of stock");
       return;
     }
-
     addToCart({ ...product, quantity: quant });
     toast.success("Added to cart!");
   };
 
-  /* =====================
-     LOADING STATE
-  ===================== */
   if (!product) {
     return (
       <div className="detail-page">
@@ -87,53 +74,52 @@ const Detail = () => {
         Go to Shop
       </button>
 
-      {/* LEFT */}
       <div className="left">
-        <img src={mainImg} alt={product.title} className="main-img" />
+        <img 
+          src={mainImg} 
+          alt={product.title} 
+          className="main-img"
+          onError={(e) => {
+            e.target.src = "https://via.placeholder.com/500";
+          }}
+        />
 
         <div className="down-main">
-          {product.image && (
+          {(product.main_image || product.image) && (
             <img
-              src={product.image}
+              src={product.main_image || product.image}
               alt="preview-1"
               className="down"
-              onClick={() => setMainImg(product.image)}
+              onClick={() => setMainImg(product.main_image || product.image)}
             />
           )}
-
-          {product.sImage && (
+          {product.second_image && (
             <img
-              src={product.sImage}
+              src={product.second_image}
               alt="preview-2"
               className="down"
-              onClick={() => setMainImg(product.sImage)}
+              onClick={() => setMainImg(product.second_image)}
             />
           )}
-
-          {product.tImage && (
+          {product.third_image && (
             <img
-              src={product.tImage}
+              src={product.third_image}
               alt="preview-3"
               className="down"
-              onClick={() => setMainImg(product.tImage)}
+              onClick={() => setMainImg(product.third_image)}
             />
           )}
         </div>
       </div>
 
-      {/* RIGHT */}
       <div className="right">
         <h2>{product.title}</h2>
         <p className="small">{product.name}</p>
-
         <p className="info">{product.description}</p>
-
         <div className="pp">₹ {product.price}</div>
-
         <p className={`stock ${product.stock === false ? "out" : ""}`}>
           {product.stock ? "In Stock" : "Out of Stock"}
         </p>
-
         <div className="qntity">
           <button onClick={() => setQuant((q) => Math.max(1, q - 1))}>
             −
@@ -141,7 +127,6 @@ const Detail = () => {
           <span>{quant}</span>
           <button onClick={() => setQuant((q) => q + 1)}>+</button>
         </div>
-
         <div className="btn-row">
           <button
             className="add-btn"
@@ -150,7 +135,6 @@ const Detail = () => {
           >
             Add to Cart
           </button>
-
           <button
             className="pay"
             disabled={product.stock === false}

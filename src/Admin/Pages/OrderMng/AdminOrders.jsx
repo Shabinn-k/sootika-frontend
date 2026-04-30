@@ -7,10 +7,6 @@ import "./AdminOrders.css";
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
-
-  /* =====================
-     FETCH ALL ORDERS
-  ===================== */
   const fetchOrders = async () => {
     try {
       const res = await api.get("/admin/users");
@@ -41,9 +37,6 @@ const AdminOrders = () => {
     fetchOrders();
   }, []);
 
-  /* =====================
-     UPDATE ORDER STATUS
-  ===================== */
   const updateOrder = async (userId, orderId, newTrack) => {
     try {
       setLoadingId(orderId);
@@ -87,42 +80,27 @@ const AdminOrders = () => {
           <p>No orders found</p>
         ) : (
           orders.map((order) => (
-            <div
-              className="order-card"
-              key={`${order.userId}-${order.orderId}`}
-            >
-              {/* USER INFO */}
+            <div className="order-card" key={`${order.userId}-${order.orderId}`}>
               <p><b>User:</b> {order.userName}</p>
               <p><b>Phone:</b> {order.userPhone || "N/A"}</p>
 
-              {/* ORDER INFO */}
               <p><b>Order ID:</b> #{order.orderId}</p>
               <p><b>Date:</b> {order.date}</p>
               <p>
                 <b>Payment:</b>{" "}
-                {order.paymentMethod
-                  ? order.paymentMethod.toUpperCase()
-                  : "N/A"}
+                {order.paymentMethod ? order.paymentMethod.toUpperCase() : "N/A"}
               </p>
 
               <h3 className="ppp">Total: ₹ {order.total}</h3>
-
-              {/* ORDER STATUS */}
               <label>Status:</label>
-              <select
-                value={order.track}
-                disabled={loadingId === order.orderId}
-                onChange={(e) =>
-                  updateOrder(order.userId, order.orderId, e.target.value)
-                }
-              >
+              <select value={order.track} disabled={loadingId === order.orderId}
+                onChange={(e) => updateOrder(order.userId, order.orderId, e.target.value)}>
                 <option>Pending</option>
                 <option>Shipped</option>
                 <option>Delivered</option>
                 <option>Cancelled</option>
               </select>
 
-              {/* DELIVERY ADDRESS */}
               {order.shippingAddress && (
                 <>
                   <h4>Delivery Address</h4>
@@ -135,7 +113,6 @@ const AdminOrders = () => {
                 </>
               )}
 
-              {/* ITEMS */}
               <h4>Items</h4>
               {order.items.map((item) => (
                 <p key={item.id}>

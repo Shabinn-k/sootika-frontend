@@ -15,8 +15,6 @@ const Layout = ({ children }) => {
 
   return (
     <div className="admin-wrapper">
-
-      {/* SIDEBAR */}
       <aside className="admin-sidebar">
         <h2 className="admin-logo">Admin</h2>
 
@@ -60,8 +58,6 @@ const Layout = ({ children }) => {
           </button>
         </div>
       </aside>
-
-      {/* MAIN CONTENT */}
       <main className="admin-content">
         <div className="admin-page">{children}</div>
       </main>

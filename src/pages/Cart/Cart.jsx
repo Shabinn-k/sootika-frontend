@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { CartContext } from "../../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Authentication/AuthContext";
@@ -8,19 +8,18 @@ import "./Cart.css";
 const Cart = () => {
   const navigate = useNavigate();
   const { cartItems, addToCart, removeCart } = useContext(CartContext);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+ 
+useEffect(() => {
+  if (!loading && !user) {
+    toast.warn("Please login to view cart");
+    navigate("/");
+  }
+}, [user, loading, navigate]);
 
-  // 🔒 Guard route (side-effect safe)
-  useEffect(() => {
-    if (!user) {
-      toast.warn("Please login to view cart");
-      navigate("/");
-    }
-  }, [user, navigate]);
+if (loading) return <div>Loading...</div>;
+if (!user) return null;
 
-  if (!user) return null;
-
-  // 🧮 Calculations
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
@@ -44,7 +43,14 @@ const Cart = () => {
 
           {cartItems.map((item) => (
             <div key={item.id} className="cart-card">
-              <img src={item.image} alt={item.title} width={150} />
+              <img 
+                src={item.main_image || item.image} 
+                alt={item.title} 
+                width={150}
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/150";
+                }}
+              />
 
               <div className="cart-info">
                 <h3>{item.title}</h3>
@@ -61,9 +67,7 @@ const Cart = () => {
                 >
                   −
                 </button>
-
                 <span>{item.quantity}</span>
-
                 <button
                   onClick={() =>
                     addToCart({ ...item, quantity: 1 })
@@ -82,37 +86,26 @@ const Cart = () => {
             </div>
           ))}
 
-          {/* 💳 ORDER SUMMARY */}
           <div className="payment-summary">
             <h2>Order Summary</h2>
-
             <div className="payment-row">
               <span>Subtotal</span>
               <span>₹ {subtotal}</span>
             </div>
-
             <div className="payment-row">
               <span>Shipping</span>
               <span>₹ {shipping}</span>
             </div>
-
             <div className="payment-row total">
               <span>Total</span>
               <span>₹ {total}</span>
             </div>
-
-            <button
-              className="pay-btn"
-              onClick={() => navigate("/payment")}
-            >
+            <button className="pay-btn" onClick={() => navigate("/payment")}>
               Proceed to Payment
             </button>
           </div>
 
-          <button
-            className="home-btn large"
-            onClick={() => navigate("/")}
-          >
+          <button className="home-btn large" onClick={() => navigate("/")}>
             Continue Shopping
           </button>
         </>

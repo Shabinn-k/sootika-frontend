@@ -16,7 +16,6 @@ const AdminProducts = () => {
     try {
       setLoading(true);
       const res = await api.get("/products");
-      // Handle both response formats
       const productList = res.data?.data || res.data || [];
       setProducts(Array.isArray(productList) ? productList : []);
     } catch (err) {
@@ -58,21 +57,14 @@ const AdminProducts = () => {
       <div className="admin-products">
         <div className="admin-header">
           <h2>Products</h2>
-          <button
-            className="add-product-btn"
-            onClick={() => navigate("/admin/products/add")}
-          >
+          <button className="add-product-btn"
+            onClick={() => navigate("/admin/products/add")}>
             + Add New Product
           </button>
         </div>
 
-        <input
-          className="admin-search"
-          type="search"
-          placeholder="Search products..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <input className="admin-search" type="search" placeholder="Search products..."
+          value={search} onChange={(e) => setSearch(e.target.value)} />
 
         {loading ? (
           <p className="loading-text">Loading products...</p>
@@ -92,10 +84,13 @@ const AdminProducts = () => {
                 filteredProducts.map(p => (
                   <tr key={p.id}>
                     <td>
-                      <img 
-                        src={p.main_image || p.image} 
+                      <img
+                        src={p.main_image || p.image}
                         alt={p.title}
                         style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "8px" }}
+                        onError={(e) => {
+                          e.target.src = "https://via.placeholder.com/50";
+                        }}
                       />
                     </td>
                     <td className="clickable" onClick={() => navigate(`/admin/products/${p.id}`)}>
@@ -109,23 +104,16 @@ const AdminProducts = () => {
                     </td>
                     <td>
                       <div className="action-btns">
-                        <button
-                          className="view-btn"
-                          onClick={() => navigate(`/admin/products/${p.id}`)}
-                        >
+                        <button className="view-btn"
+                          onClick={() => navigate(`/admin/products/${p.id}`)}>
                           View
                         </button>
-                        <button
-                          className="edit-btn"
-                          onClick={() => navigate(`/admin/products/edit/${p.id}`)}
-                        >
+                        <button className="edit-btn"
+                          onClick={() => navigate(`/admin/products/edit/${p.id}`)} >
                           Edit
                         </button>
-                        <button
-                          className="delete-btn"
-                          onClick={() => deleteProduct(p.id)}
-                          disabled={deletingId === p.id}
-                        >
+                        <button className="delete-btn" onClick={() => deleteProduct(p.id)}
+                          disabled={deletingId === p.id}>
                           {deletingId === p.id ? "..." : "Delete"}
                         </button>
                       </div>

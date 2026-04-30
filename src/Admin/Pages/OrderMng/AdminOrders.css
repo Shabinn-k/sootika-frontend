@@ -1,6 +1,3 @@
-/* =========================
-   PAGE WRAPPER
-========================= */
 .admin-orders {
   padding: 40px 20px;
   max-width: 1100px;
@@ -8,9 +5,6 @@
   font-family: "Segoe UI", sans-serif;
 }
 
-/* =========================
-   PAGE TITLE
-========================= */
 .admin-orders h2 {
   font-size: 30px;
   margin-bottom: 30px;
@@ -18,9 +12,6 @@
   font-weight: 800;
 }
 
-/* =========================
-   ORDER CARD
-========================= */
 .order-card {
   background: linear-gradient(145deg, #ffffff, #fff7ec);
   padding: 22px 26px;
@@ -36,9 +27,6 @@
   box-shadow: 0 12px 30px rgba(210, 180, 140, 0.45);
 }
 
-/* =========================
-   TEXT
-========================= */
 .order-card p {
   font-size: 15px;
   color: #5c4a36;
@@ -46,7 +34,6 @@
   line-height: 1.6;
 }
 
-/* TOTAL */
 .ppp {
   font-size: 18px;
   font-weight: 800;
@@ -54,9 +41,6 @@
   margin: 10px 0 14px;
 }
 
-/* =========================
-   SECTION HEADINGS
-========================= */
 .order-card h4 {
   margin-top: 20px;
   margin-bottom: 8px;
@@ -65,9 +49,6 @@
   color: #4b3621;
 }
 
-/* =========================
-   STATUS LABEL
-========================= */
 .order-card label {
   display: block;
   margin-top: 16px;
@@ -75,9 +56,6 @@
   color: #4b3621;
 }
 
-/* =========================
-   STATUS DROPDOWN
-========================= */
 .order-card select {
   margin-top: 8px;
   padding: 6px 14px;
@@ -100,9 +78,6 @@
   box-shadow: 0 0 0 2px rgba(193, 154, 107, 0.25);
 }
 
-/* =========================
-   DELIVERY ADDRESS
-========================= */
 .delivery-address {
   margin-top: 14px;
   padding: 14px 16px;
@@ -115,9 +90,6 @@
   margin: 4px 0;
 }
 
-/* =========================
-   ITEMS LIST
-========================= */
 .order-items p {
   padding-left: 10px;
   position: relative;
@@ -131,25 +103,17 @@
   font-weight: bold;
 }
 
-/* =========================
-   DIVIDER
-========================= */
 .order-card::after {
   content: "";
   display: block;
   margin-top: 22px;
   height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    #e6d5bd,
-    transparent
-  );
+  background: linear-gradient(to right,
+      transparent,
+      #e6d5bd,
+      transparent);
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
 @media (max-width: 768px) {
   .admin-orders {
     padding: 20px 12px;
