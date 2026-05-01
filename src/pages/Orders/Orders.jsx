@@ -91,7 +91,6 @@ const Orders = () => {
     return map[status] || "status-pending";
   };
 
-  // 🔥 AUTH LOADING
   if (authLoading) {
     return (
       <div className="orders-page">
@@ -103,7 +102,6 @@ const Orders = () => {
     );
   }
 
-  // 🔥 PAGE LOADING
   if (loading) {
     return (
       <div className="orders-page">
@@ -138,7 +136,6 @@ const Orders = () => {
 
             return (
               <div className="order-card" key={order.id || order.orderId}>
-                {/* HEADER */}
                 <div className="order-header">
                   <div className="order-info">
                     <h3>
@@ -159,7 +156,6 @@ const Orders = () => {
                   </span>
                 </div>
 
-                {/* ITEMS */}
                 <div className="order-items">
                   {(order.items || []).map((item, idx) => (
                     <div
@@ -188,7 +184,6 @@ const Orders = () => {
                   ))}
                 </div>
 
-                {/* ADDRESS */}
                 {order.shipping_address && (
                   <div className="shipping-address">
                     <strong>📮 Shipping Address:</strong>
@@ -201,7 +196,6 @@ const Orders = () => {
                   </div>
                 )}
 
-                {/* FOOTER */}
                 <div className="order-footer">
                   <div className="payment-info">
                     <span>

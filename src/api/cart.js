@@ -4,7 +4,8 @@ export const cartService = {
   getCart: async () => {
     await initAuth();
     const res = await api.get("/cart");
-    return { data: res.data?.cart?.items || [], success: true };
+    const items = res.data?.cart?.items || [];
+    return { data: items, success: true };
   },
 
   getCartCount: async () => {
@@ -15,19 +16,19 @@ export const cartService = {
 
   addToCart: async (data) => {
     await initAuth();
-    const res = await api.post("/cart", data); 
+    const res = await api.post("/cart", data);
     return { data: res.data, success: true };
   },
 
-  updateCartItem: async (id, data) => {
+  updateCartItem: async (itemId, data) => {
     await initAuth();
-    const res = await api.put(`/cart/${id}`, data); 
+    const res = await api.put(`/cart/${itemId}`, data);
     return { data: res.data, success: true };
   },
 
   removeFromCart: async (id) => {
     await initAuth();
-    const res = await api.delete(`/cart/${id}`); 
+    const res = await api.delete(`/cart/${id}`);
     return { data: res.data, success: true };
   },
 

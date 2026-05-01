@@ -9,7 +9,7 @@ import "./UserDetail.css";
 const UserDetail = () => {
   const { loading: authLoading } = useAuth();
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true); // ✅ Add loading state
+  const [loading, setLoading] = useState(true); 
   const [search, setSearch] = useState("");
   const [showBlocked, setShowBlocked] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
@@ -96,7 +96,6 @@ const UserDetail = () => {
 
   const blockedCount = users.filter((u) => u.is_blocked).length;
 
-  // ✅ Show loading state
   if (authLoading || loading) {
     return (
       <Layout>

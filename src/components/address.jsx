@@ -16,8 +16,7 @@ const AddressModal = ({ onClose, onAdd, user }) => {
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-
-  // ⚠️ ADD: Validation function
+ 
   const validateForm = () => {
     const newErrors = {};
     
@@ -51,8 +50,7 @@ const AddressModal = ({ onClose, onAdd, user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // ⚠️ FIX: Validate before submission
+     
     if (!validateForm()) {
       toast.error("Please fix the errors in the form");
       return;

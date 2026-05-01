@@ -18,8 +18,7 @@ const TopSelling = ({ setShowLogin }) => {
     useEffect(() => {
         productService.getAllProducts()
             .then(res => {
-                const allProducts = res.data || [];
-                // ⚠️ ONLY SHOW FIRST 8 PRODUCTS
+                const allProducts = res.data || []; 
                 setProducts(allProducts.slice(0, 8));
                 setLoading(false);
             })
@@ -76,8 +75,7 @@ const TopSelling = ({ setShowLogin }) => {
     }
 
     const isProductOutOfStock = (item) => item.stock === false || item.stock === 0;
-    
-    // ⚠️ Split first 4 and next 4
+     
     const firstGroup = products.slice(0, 4);
     const secondGroup = products.slice(4, 8);
 

@@ -15,8 +15,7 @@ const Navbar = ({ setShowLogin }) => {
   const [openProfile, setOpenProfile] = useState(false);
 
   const profileRef = useRef(null);
-
-  // 🔹 Close profile dropdown on outside click
+ 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -54,8 +53,7 @@ const Navbar = ({ setShowLogin }) => {
 
   return (
     <>
-      <div className="navbar">
-        {/* LOGO */}
+      <div className="navbar"> 
         <img
           src={image.logo}
           className="title"
@@ -63,33 +61,28 @@ const Navbar = ({ setShowLogin }) => {
           onClick={() => navigate("/")}
           style={{ cursor: "pointer" }}
         />
-
-        {/* DESKTOP LINKS */}
+ 
         <div className="links">
           <Link to="/" className="link-items">Home</Link>
           <Link to="/shop" className="link-items">Shop</Link>
           <Link to="/about" className="link-items">About Us</Link>
         </div>
-
-        {/* RIGHT ACTIONS */}
-        <div className="fnction">
-          {/* WISHLIST */}
+ 
+        <div className="fnction"> 
           <div onClick={handleWish} className="navbar-search-icon">
             <img src={image.hrt} alt="wishlist" width={25} />
             {wishItems.length > 0 && (
               <div className="dot">{wishItems.length}</div>
             )}
           </div>
-
-          {/* CART */}
+ 
           <div onClick={handleCart} className="navbar-search-icon">
             <img src={image.cart} alt="cart" width={25} />
             {cartItems.length > 0 && (
               <div className="dot">{cartItems.length}</div>
             )}
           </div>
-
-          {/* PROFILE / LOGIN */}
+ 
           {user ? (
             <div className="profile-wrapper" ref={profileRef}>
               <div
@@ -131,8 +124,7 @@ const Navbar = ({ setShowLogin }) => {
             </button>
           )}
         </div>
-
-        {/* MOBILE MENU BUTTON */}
+ 
         <div
           className="mobile-menu-btn"
           onClick={() => {
@@ -143,8 +135,7 @@ const Navbar = ({ setShowLogin }) => {
           ☰
         </div>
       </div>
-
-      {/* MOBILE MENU */}
+ 
       {openMenu && (
         <div className="mobile-links">
           <Link to="/" onClick={() => setOpenMenu(false)}>Home</Link>

@@ -8,6 +8,7 @@ export const CartContext = createContext(null);
 
 const CartContextProvider = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
+
   const [cartItems, setCartItems] = useState([]);
   const [wishItems, setWishItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,18 +27,51 @@ const CartContextProvider = ({ children }) => {
       setLoading(true);
       try {
         const cartRes = await cartService.getCart();
-        const wishRes = await wishlistService.getWishlist();
 
-        const mappedCart = (cartRes.data || []).map(item => ({
+        let cartData = [];
+        if (Array.isArray(cartRes.data)) {
+          cartData = cartRes.data;
+        } else if (cartRes.data?.items) {
+          cartData = cartRes.data.items;
+        } else if (cartRes.data?.cart?.items) {
+          cartData = cartRes.data.cart.items;
+        }
+
+        const mappedCart = cartData.map(item => ({
           ...item,
-          image: item.main_image || item.image,
-          product_id: item.product_id || item.id
+          cart_item_id: item.id,
+          product_id: item.product_id || item.Product?.id,
+          id: item.product_id || item.id,
+          title: item.title || item.Product?.title,
+          price: item.price || item.Product?.price,
+          image: item.main_image || item.Product?.main_image,
+          quantity: item.quantity || 1
         }));
 
         setCartItems(mappedCart);
-        setWishItems(wishRes.data || []);
+
+        const wishRes = await wishlistService.getWishlist();
+
+        let wishData = [];
+        if (Array.isArray(wishRes.data)) {
+          wishData = wishRes.data;
+        } else if (wishRes.data?.items) {
+          wishData = wishRes.data.items;
+        }
+
+        const mappedWish = wishData.map(item => ({
+          ...item,
+          product: item.product || item,
+          id: item.product?.id || item.product_id || item.id,
+          title: item.product?.title || item.title,
+          price: item.product?.price || item.price,
+          image: item.product?.main_image || item.image
+        }));
+
+        setWishItems(mappedWish);
+
       } catch (err) {
-        console.error("Fetch data error:", err);
+        console.error("Fetch error:", err);
         if (err.response?.status === 401) {
           setCartItems([]);
           setWishItems([]);
@@ -49,25 +83,32 @@ const CartContextProvider = ({ children }) => {
 
     fetchData();
   }, [user, authLoading]);
+ 
+const fetchCart = async () => {
+  if (!user || authLoading) return;
 
-  const fetchCart = async () => {
-    if (!user || authLoading) return;
+  try {
+    const cartRes = await cartService.getCart();
+    const cartData = Array.isArray(cartRes.data) ? cartRes.data : [];
+    
+   const mappedCart = cartData.map(item => ({
+  ...item,
+  cart_item_id: item.id,
+  product_id: item.product_id || item.Product?.id,
+  id: item.product_id || item.id, 
+  title: item.title || item.Product?.title || item.product?.title || "Product",
+  price: item.price || item.Product?.price || item.product?.price || 0,
+  image: item.image || item.main_image || item.Product?.main_image || item.product?.main_image,
+  quantity: item.quantity || 1
+}));
+    
+    console.log("Mapped cart items with details:", mappedCart);
+    setCartItems(mappedCart);
+  } catch (err) {
+    console.error("Fetch cart error:", err);
+  }
+};
 
-    setLoading(true);
-    try {
-      const cartRes = await cartService.getCart();
-      const mappedCart = (cartRes.data || []).map(item => ({
-        ...item,
-        image: item.main_image || item.image,
-        product_id: item.product_id || item.id
-      }));
-      setCartItems(mappedCart);
-    } catch (err) {
-      console.error("Fetch cart error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const addToCart = async (item) => {
     if (!user) {
@@ -75,42 +116,56 @@ const CartContextProvider = ({ children }) => {
       return;
     }
 
+    const productId = item.id || item.product_id;
+    
+    if (!productId) {
+      toast.error("Invalid product");
+      return;
+    }
+
     try {
       await cartService.addToCart({
-        product_id: item.id,
-        quantity: item.quantity || 1
+        product_id: productId,
+        quantity: 1
       });
-      setCartItems((prev) => {
-        const exist = prev.find((p) => p.product_id === item.id || p.id === item.id);
-        if (exist) {
-          return prev.map((p) =>
-            p.product_id === item.id || p.id === item.id
-              ? { ...p, quantity: p.quantity + (item.quantity || 1), image: p.main_image || p.image }
-              : p
-          );
-        } else {
-          return [...prev, {
-            ...item,
-            product_id: item.id,
-            quantity: item.quantity || 1,
-            image: item.main_image || item.image
-          }];
-        }
-      });
-
-      toast.success("Cart updated");
+      
+      await fetchCart();
+      toast.success("Added to cart");
     } catch (err) {
-      toast.error("Failed to add to cart");
+      console.error("Add to cart error:", err);
+      toast.error(err.response?.data?.error || "Failed to add to cart");
     }
   };
 
-  const removeCart = async (id) => {
+  const removeCart = async (cartItemId) => {
+    if (!cartItemId) {
+      toast.error("Invalid cart item ID");
+      return;
+    }
+    
     try {
-      await cartService.removeFromCart(id);
-      setCartItems(prev => prev.filter(item => item.product_id !== id));
-      toast.info("Item removed from cart");
+      await cartService.removeFromCart(cartItemId);
+      setCartItems(prev => prev.filter(item => item.cart_item_id !== cartItemId));
+      toast.info("Removed from cart");
     } catch (err) {
-      toast.error("Failed to remove from cart");
+      console.error("Remove error:", err);
+      toast.error("Failed to remove");
+    }
+  };
+
+  const updateCartItem = async (cartItemId, data) => {
+    if (!cartItemId) {
+      toast.error("Invalid item ID");
+      return;
+    }
+    
+    try {
+      await cartService.updateCartItem(cartItemId, data);
+      await fetchCart();
+      toast.success("Cart updated");
+    } catch (err) {
+      console.error("Update cart error:", err);
+      toast.error(err.response?.data?.error || "Failed to update cart");
     }
   };
 
@@ -119,37 +174,61 @@ const CartContextProvider = ({ children }) => {
       await cartService.clearCart();
       setCartItems([]);
       toast.info("Cart cleared");
-    } catch (err) {
-      toast.error("Failed to clear cart");
+    } catch {
+      toast.error("Failed");
     }
   };
 
   const addToWish = async (item) => {
     if (!user) {
-      toast.warn("Please login to add items");
+      toast.warn("Login required");
       return;
     }
 
+    const productId = item.product?.id || item.product_id || item.id;
+
     try {
-      await wishlistService.addToWishlist({ product_id: item.id });
-      setWishItems((prev) => [...prev, { ...item, image: item.main_image || item.image }]);
+      await wishlistService.addToWishlist({ product_id: productId });
+      await fetchWishlist();
       toast.success("Added to wishlist");
-    } catch (err) {
-      toast.error("Failed to add to wishlist");
+    } catch {
+      toast.error("Failed to add");
     }
   };
 
-  const removeWish = async (id) => {
+  const fetchWishlist = async () => {
+    try {
+      const res = await wishlistService.getWishlist();
+      let data = [];
+      if (Array.isArray(res.data)) data = res.data;
+      else if (res.data?.items) data = res.data.items;
+
+      const mapped = data.map(item => ({
+        ...item,
+        product: item.product || item,
+        id: item.product?.id || item.product_id || item.id,
+        title: item.product?.title || item.title,
+        price: item.product?.price || item.price,
+        image: item.product?.main_image || item.image
+      }));
+
+      setWishItems(mapped);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const removeWish = async (item) => {
+    const id = item.product?.id || item.product_id || item.id;
+
     try {
       await wishlistService.removeFromWishlist(id);
-      setWishItems((prev) => {
-        const exists = prev.find(p => p.id === item.id);
-        if (exists) return prev;
-        return [...prev, item];
-      });
+      setWishItems(prev =>
+        prev.filter(i => (i.product?.id !== id) && (i.product_id !== id))
+      );
       toast.info("Removed from wishlist");
-    } catch (err) {
-      toast.error("Failed to remove from wishlist");
+    } catch {
+      toast.error("Failed to remove");
     }
   };
 
@@ -157,14 +236,15 @@ const CartContextProvider = ({ children }) => {
     <CartContext.Provider
       value={{
         cartItems,
+        wishItems,
         addToCart,
         removeCart,
         clearCart,
-        wishItems,
         addToWish,
+        updateCartItem,
         removeWish,
-        loading,
         fetchCart,
+        loading
       }}
     >
       {children}

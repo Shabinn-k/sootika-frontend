@@ -2,7 +2,7 @@ import { api } from "./Axios";
 
 export const productService = {
   getAllProducts: async () => {
-    const res = await api.get("/products/");
+    const res = await api.get("/products");
     return { data: res.data?.data || [] };
   },
 

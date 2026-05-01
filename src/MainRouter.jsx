@@ -15,14 +15,12 @@ const ProductDetail = lazy(() => import("./Admin/Pages/ProductMng/ProductDetail.
 const AddProduct = lazy(() => import("./Admin/Pages/ProductMng/AddProducts.jsx"));
 const EditProduct = lazy(() => import("./Admin/Pages/ProductMng/EditProducts.jsx"));
 const UserDetail = lazy(() => import("./Admin/Pages/UserMng/UserDetail.jsx"));
-const AdminFeedback = lazy(() => import("./Admin/Pages/FeedBack/AdminFeedback.jsx"));
 const AdminOrders = lazy(() => import("./Admin/Pages/OrderMng/AdminOrders.jsx"));
 
 const Cart = lazy(() => import("./pages/Cart/Cart.jsx"));
 const Wishlist = lazy(() => import("./pages/Wishlist/Wishlist.jsx"));
 const Detail = lazy(() => import("./pages/DetailsCard/Detail.jsx"));
 const Payment = lazy(() => import("./pages/Payment/Payment.jsx"));
-const WriteFeed = lazy(() => import("./pages/WriteFeed/WriteFeed.jsx"));
 const Orders = lazy(() => import("./pages/Orders/Orders.jsx"));
 
 const MainRouter = () => {
@@ -42,7 +40,6 @@ const MainRouter = () => {
         <Route path="/about" element={<About />} />
         <Route path="/detail/:id" element={<Detail />} />
         <Route path="/payment" element={<Payment />} />
-        <Route path="/write-feedback" element={<WriteFeed />} />
         <Route path="/myOrders" element={<Orders />} />
 
        
@@ -52,7 +49,6 @@ const MainRouter = () => {
         <Route path="/admin/products/edit/:id" element={<AdminProtected><EditProduct /></AdminProtected>} />
         <Route path="/admin/products/:id" element={<AdminProtected><ProductDetail /></AdminProtected>} />
         <Route path="/admin/users" element={<AdminProtected><UserDetail /></AdminProtected>} />
-        <Route path="/admin/feedback" element={<AdminProtected><AdminFeedback /></AdminProtected>} />
         <Route path="/admin/orders" element={<AdminProtected><AdminOrders /></AdminProtected>} />
 
         <Route path="/404" element={<NotFound />} />

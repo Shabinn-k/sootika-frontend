@@ -47,17 +47,16 @@ export const adminService = {
       return { success: false, error: error.response?.data?.message };
     }
   },
-
-  toggleUserBlock: async (id) => {
-    try {
-      await initAuth();
-      const response = await api.put(`/admin/users/${id}/block`)
-      return { success: true, data: response.data };
-    } catch (error) {
-      console.error("Toggle block error:", error);
-      return { success: false, error: error.response?.data?.message };
-    }
-  },
+toggleUserBlock: async (id) => {
+  try {
+    await initAuth(); 
+    const response = await api.put(`/admin/users/${id}/block`)
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("Toggle block error:", error);
+    return { success: false, error: error.response?.data?.message || "Failed to toggle block" };
+  }
+},
 
   deleteUser: async (id) => {
     try {
@@ -127,38 +126,5 @@ export const adminService = {
       console.error("Delete product error:", error);
       return { success: false, error: error.response?.data?.message };
     }
-  },
-
-  getFeedbacks: async () => {
-    try {
-      await initAuth();
-      const response = await api.get('/admin/feedbacks');
-      return { success: true, data: response.data?.data || response.data || [] };
-    } catch (error) {
-      console.error("Get feedbacks error:", error);
-      return { success: false, data: [], error: error.response?.data?.message };
-    }
-  },
-
-  approveFeedback: async (id) => {
-    try {
-      await initAuth();
-      const response = await api.put(`/admin/feedbacks/${id}/approve`);
-      return { success: true, data: response.data };
-    } catch (error) {
-      console.error("Approve feedback error:", error);
-      return { success: false, error: error.response?.data?.message };
-    }
-  },
-
-  deleteFeedback: async (id) => {
-    try {
-      await initAuth();
-      const response = await api.delete(`/admin/feedbacks/${id}`);
-      return { success: true, data: response.data };
-    } catch (error) {
-      console.error("Delete feedback error:", error);
-      return { success: false, error: error.response?.data?.message };
-    }
-  },
+  }
 };

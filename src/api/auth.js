@@ -15,14 +15,21 @@ export const authService = {
     }
   },
 
-  verifyOTP: async (data) => {
-    try {
-      const response = await api.post("/auth/verify", data)
+verifyOTP: async (data) => {
+  try {
+    const response = await api.post("/auth/verify", data) 
+    if (response.status === 200 && response.data) {
       return { success: true, data: response.data };
-    } catch (error) {
-      return { success: false, error: error.response?.data?.error || "OTP verification failed" };
     }
-  },
+    return { success: false, error: "Verification failed" };
+  } catch (error) {
+    console.error("OTP verification error:", error); 
+    return { 
+      success: false, 
+      error: error.response?.data?.error || "OTP verification failed" 
+    };
+  }
+},
 
   resendOTP: async (email) => {
     try {

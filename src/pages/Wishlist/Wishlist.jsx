@@ -7,8 +7,15 @@ import "./Wishlist.css";
 
 const Wishlist = () => {
   const navigate = useNavigate();
-  const { wishItems, removeWish, addToCart, loading: cartLoading } = useContext(CartContext);  
-  const { user, loading: authLoading } = useAuth(); 
+
+  const {
+    wishItems,
+    removeWish,
+    addToCart,
+    loading: cartLoading,
+  } = useContext(CartContext);
+
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -28,19 +35,42 @@ const Wishlist = () => {
   if (!user) return null;
 
   const handleMoveToCart = async (item) => {
-    const isOutOfStock = item.stock === false || item.stock === 0;
-    if (isOutOfStock) {
-      toast.error("Product is out of stock");
+    const product = item.product || item;
+
+    const productId = product.id;
+
+    if (!productId) {
+      toast.error("Invalid product");
       return;
     }
-    
-   try {
-  await addToCart({ ...item, quantity: 1 });
-  await removeWish(item.product_id);
-  toast.success("Moved to cart");
-} catch (err) {
-  toast.error("Failed to move item");
-}
+
+    const isOutOfStock =
+      product.stock === false || product.stock === 0;
+
+    if (isOutOfStock) {
+      toast.error("Out of stock");
+      return;
+    }
+
+    try {
+      await addToCart(product);
+
+      await removeWish(item);
+
+      toast.success("Moved to cart");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to move item");
+    }
+  };
+
+  const handleRemove = async (item) => {
+    try {
+      await removeWish(item);
+      toast.info("Removed from wishlist");
+    } catch {
+      toast.error("Failed to remove");
+    }
   };
 
   const hasItems = (wishItems?.length || 0) > 0;
@@ -58,14 +88,19 @@ const Wishlist = () => {
         <>
           <h1 className="wishlist-title">Your Wishlist</h1>
 
-          {wishItems.map((item) => {
-            const isOutOfStock = item.stock === false || item.stock === 0;
-            
+          {wishItems.map((item, index) => {
+            const product = item.product || item;
+
+            const id = product.id || item.product_id || index;
+
+            const isOutOfStock =
+              product.stock === false || product.stock === 0;
+
             return (
-              <div className="wish-card" key={item.id || item.product_id}>
-                <img 
-                  src={item.main_image || item.image} 
-                  alt={item.title} 
+              <div className="wish-card" key={id}>
+                <img
+                  src={product.main_image || product.image}
+                  alt={product.title || "Product"}
                   width={150}
                   onError={(e) => {
                     e.target.src = "https://via.placeholder.com/150";
@@ -73,9 +108,9 @@ const Wishlist = () => {
                 />
 
                 <div className="wish-info">
-                  <h3>{item.title}</h3>
-                  <h2>{item.name}</h2>
-                  <span>₹ {item.price}</span>
+                  <h3>{product.title || "No title"}</h3>
+                  <span>₹ {product.price || 0}</span>
+
                   {isOutOfStock && (
                     <p className="stock out">Out of Stock</p>
                   )}
@@ -85,20 +120,27 @@ const Wishlist = () => {
                   <button
                     className="tocart-btn"
                     onClick={() => handleMoveToCart(item)}
-                    disabled={isOutOfStock} >
+                    disabled={isOutOfStock || cartLoading}
+                  >
                     Add to Cart
                   </button>
-                  <button disabled={cartLoading}
+
+                  <button
+                    disabled={cartLoading}
                     className="remove-btn"
-                    onClick={() => removeWish(item.product_id)}>
+                    onClick={() => handleRemove(item)}
+                  >
                     Remove
                   </button>
                 </div>
               </div>
             );
           })}
-          
-          <button className="home-btn large" onClick={() => navigate("/")}>
+
+          <button
+            className="home-btn large"
+            onClick={() => navigate("/")}
+          >
             Continue Shopping
           </button>
         </>

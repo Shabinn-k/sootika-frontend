@@ -2,8 +2,7 @@ import { useState } from "react";
 import Navbar from "./Navbar/Navbar";
 import Banner from "./Banner";
 import TopSelling from "./TopSelling/TopSelling";
-import Login from "../Authentication/Login";
-import Feedback from "./Feedback/Feedback";
+import Login from "../Authentication/Login"; 
 import GoShop from "./GoShop/GoShop";
 import BrandShowcase from "./Brand/BrandShowcase";
 
@@ -18,11 +17,9 @@ const Home = () => {
         <Banner />
         <TopSelling setShowLogin={setShowLogin} />
         <BrandShowcase />
-        <GoShop />
-        <Feedback setShowLogin={setShowLogin} />
+        <GoShop /> 
       </main>
-
-      {/* Login Modal */}
+ 
       {showLogin && <Login setShowLogin={setShowLogin} />}
     </>
   );

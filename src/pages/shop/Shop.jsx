@@ -1,4 +1,3 @@
-// pages/shop/Shop.jsx
 import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { productService } from "../../api/products";
@@ -13,11 +12,10 @@ const Shop = () => {
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  const { user, loading: authLoading } = useAuth(); // ⚠️ ADD authLoading
-  const { addToCart, addToWish, loading: cartLoading } = useContext(CartContext); // ⚠️ ADD cartLoading
 
-  // Fetch products from API
+  const { user, loading: authLoading } = useAuth();
+  const { addToCart, addToWish, loading: cartLoading } = useContext(CartContext);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -35,13 +33,12 @@ const Shop = () => {
     fetchProducts();
   }, []);
 
-  // Filter products based on search
   const filteredProducts = products.filter((item) =>
     item.title?.toLowerCase().includes(search.toLowerCase()) ||
     item.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddToCart = async (product) => { // ⚠️ Make async
+  const handleAddToCart = async (product) => {
     if (!user) {
       toast.warn("Please login to add items to Cart!");
       return;
@@ -61,7 +58,7 @@ const Shop = () => {
     }
   };
 
-  const handleAddToWish = async (product) => { // ⚠️ Make async
+  const handleAddToWish = async (product) => {
     if (!user) {
       toast.warn("Please login to add items to Wishlist!");
       return;
@@ -81,7 +78,6 @@ const Shop = () => {
     }
   };
 
-  // ⚠️ FIX: Show loading state
   if (loading || authLoading) {
     return (
       <div className="shop-page">
@@ -93,7 +89,7 @@ const Shop = () => {
     );
   }
 
-  const isAddingToCart = cartLoading; // For button disable feedback
+  const isAddingToCart = cartLoading;
 
   return (
     <div className="shop-page">
@@ -113,13 +109,13 @@ const Shop = () => {
         {filteredProducts.length > 0 ? (
           filteredProducts.map((item) => {
             const isOutOfStock = item.stock === false || item.stock === 0 || item.in_stock === false;
-            
+
             return (
               <div className="product-card" key={item.id}>
                 <div className="image-box">
                   <FaHeart
                     className={`wishlist-icon ${(!user || isOutOfStock) ? "disabled" : ""}`}
-                    onClick={() => user && !isOutOfStock && handleAddToWish(item)} // ⚠️ FIX: Check stock
+                    onClick={() => user && !isOutOfStock && handleAddToWish(item)}
                   />
                   <img
                     src={item.main_image || item.image}

@@ -14,8 +14,7 @@ const Dashboard = () => {
 
   const [stats, setStats] = useState({
     total_products: 0,
-    total_users: 0,
-    pending_feedback: 0,
+    total_users: 0, 
     total_revenue: 0,
     recent_users: [],
     total_orders: 0,
@@ -146,12 +145,7 @@ const Dashboard = () => {
             <p>Pending Orders</p>
           </div>
 
-          <div
-            className="dash-card warning"
-            onClick={() => goTo("/admin/feedback")}>
-            <h2>{stats.pending_feedback || 0}</h2>
-            <p>Pending Feedback</p>
-          </div>
+          
         </div>
 
         <h2 className="recent-title">Recent Users</h2>

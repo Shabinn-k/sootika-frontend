@@ -1,12 +1,9 @@
-/* PAGE */
 .users-page {
   padding: 35px;
   background: linear-gradient(135deg, #faf7f2, #f5efe6);
   min-height: 100vh;
   font-family: "Segoe UI", sans-serif;
 }
-
-/* COUNTS */
 .users-page h3 {
   display: inline-block;
   margin-right: 25px;
@@ -18,7 +15,6 @@
   color: #4b3a26;
 }
 
-/* SEARCH + BUTTON */
 .users-page input {
   margin-top: 20px;
   padding: 10px 14px;
@@ -49,23 +45,20 @@
   background: #b08c5d;
 }
 
-/* TABLE */
 .users-table {
   width: 100%;
   margin-top: 30px;
   border-collapse: separate;
   border-spacing: 0 12px;
 }
-
-/* HEADER */
+ 
 .users-table th {
   text-align: left;
   padding: 12px;
   color: #7a6a57;
   font-size: 14px;
 }
-
-/* ROW */
+ 
 .users-table tbody tr {
   background: white;
   border-radius: 14px;
@@ -76,14 +69,12 @@
 .users-table tbody tr:hover {
   transform: translateY(-3px);
 }
-
-/* CELLS */
+ 
 .users-table td {
   padding: 14px 16px;
   color: #4b3a26;
 }
-
-/* AVATAR */
+ 
 .avatar {
   width: 42px;
   height: 42px;
@@ -96,8 +87,7 @@
   align-items: center;
   justify-content: center;
 }
-
-/* STATUS */
+ 
 .users-table td:nth-child(5) {
   font-weight: bold;
 }
@@ -105,8 +95,7 @@
 .users-table td:nth-child(5)::first-letter {
   text-transform: uppercase;
 }
-
-/* BLOCK / UNBLOCK BUTTON */
+ 
 .users-table button {
   padding: 8px 14px;
   border-radius: 20px;
@@ -123,14 +112,12 @@
   background: #e6d5bd;
 }
 
-/* PASSWORD */
 .users-table td:nth-child(4) {
   font-size: 13px;
   color: #9a8b77;
   font-style: italic;
 }
 
-/* RESPONSIVE */
 @media (max-width: 700px) {
   .users-page {
     padding: 20px;

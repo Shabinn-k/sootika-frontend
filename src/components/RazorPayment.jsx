@@ -6,15 +6,13 @@ const RazorpayPayment = ({ amount, currency = "INR", receipt, onSuccess, onFailu
     const [loading, setLoading] = useState(false);
     const [scriptLoaded, setScriptLoaded] = useState(false);
     const razorpayRef = useRef(null);
-
-    // ⚠️ FIX: Validate amount
+ 
     useEffect(() => {
         if (amount <= 0) {
             console.error("Invalid amount:", amount);
         }
     }, [amount]);
-
-    // ⚠️ FIX: Load Razorpay script once
+ 
     useEffect(() => {
         if (document.getElementById("razorpay-script")) {
             setScriptLoaded(true);
@@ -34,16 +32,14 @@ const RazorpayPayment = ({ amount, currency = "INR", receipt, onSuccess, onFailu
         };
         document.body.appendChild(script);
 
-        return () => {
-            // Cleanup
+        return () => { 
             if (razorpayRef.current) {
                 razorpayRef.current = null;
             }
         };
     }, []);
 
-    const handlePayment = async () => {
-        // ⚠️ FIX: Add validations
+    const handlePayment = async () => { 
         if (amount <= 0) {
             toast.error("Invalid payment amount");
             return;
@@ -56,25 +52,22 @@ const RazorpayPayment = ({ amount, currency = "INR", receipt, onSuccess, onFailu
 
         setLoading(true);
 
-        try {
-            // ⚠️ FIX: Create unique receipt if not provided
+        try { 
             const uniqueReceipt = receipt || `order_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
-            const amountInPaise = Math.round(amount * 100); // Convert to paise, ensure integer
-            
-            // Create order from backend
+            const amountInPaise = Math.round(amount * 100);  
+ 
             const response = await paymentService.createOrder(amountInPaise, currency, uniqueReceipt);
-            
+
             if (!response.data || !response.data.order_id) {
                 throw new Error("Invalid response from server");
             }
-            
+
             const { order_id, amount: orderAmount, currency: orderCurrency } = response.data;
-            
-            // ⚠️ FIX: Get user details from props or localStorage
+ 
             const userName = user?.name || localStorage.getItem("userName") || "";
             const userEmail = user?.email || localStorage.getItem("userEmail") || "";
             const userPhone = user?.phone || localStorage.getItem("userPhone") || "";
-            
+
             const options = {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount: orderAmount,
@@ -84,34 +77,55 @@ const RazorpayPayment = ({ amount, currency = "INR", receipt, onSuccess, onFailu
                 image: "/logo.png",
                 order_id: order_id,
                 handler: async (razorpayResponse) => {
-                    // ⚠️ FIX: Verify payment with backend
-                    try {
-                        const verifyResponse = await paymentService.verifyPayment({
-                            order_id: razorpayResponse.razorpay_order_id,
-                            payment_id: razorpayResponse.razorpay_payment_id,
-                            signature: razorpayResponse.razorpay_signature
-                        });
-                        
-                        if (verifyResponse.success) {
+                    console.log("Razorpay response:", razorpayResponse);
+
+                    try { 
+                        await initAuth();
+ 
+                        const verifyPayload = {
+                            razorpay_order_id: razorpayResponse.razorpay_order_id,
+                            razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+                            razorpay_signature: razorpayResponse.razorpay_signature
+                        };
+
+                        console.log("Sending to backend:", verifyPayload);
+
+                        const verifyResponse = await api.post("/payment/verify", verifyPayload);
+
+                        console.log("Verification response:", verifyResponse.data);
+
+                        if (verifyResponse.status === 200) {
                             toast.success("Payment successful!");
-                            if (onSuccess) {
-                                onSuccess({
-                                    ...verifyResponse.data,
-                                    paymentId: razorpayResponse.razorpay_payment_id,
-                                    orderId: razorpayResponse.razorpay_order_id
-                                });
+ 
+                            const orderData = {
+                                items: items.map(item => ({
+                                    product_id: item.product_id || item.id,
+                                    quantity: item.quantity || 1
+                                })),
+                                address_id: selectedAddress.id,
+                                payment_method: "razorpay",
+                                payment_id: razorpayResponse.razorpay_payment_id,
+                                razorpay_order_id: razorpayResponse.razorpay_order_id
+                            };
+
+                            const orderResponse = await api.post("/orders", orderData);
+                            console.log("Order created:", orderResponse.data);
+
+                            if (clearCart) {
+                                await clearCart();
                             }
-                        } else {
-                            throw new Error(verifyResponse.error || "Verification failed");
+
+                            toast.success("Order placed successfully!");
+                            setTimeout(() => {
+                                navigate("/myOrders", { replace: true });
+                            }, 500);
                         }
                     } catch (error) {
                         console.error("Verification error:", error);
-                        toast.error(error.response?.data?.error || error.message || "Payment verification failed");
-                        if (onFailure) {
-                            onFailure(error);
-                        }
+                        console.log("Error response:", error.response?.data);
+                        toast.error(error.response?.data?.message || error.response?.data?.error || "Payment verification failed");
+                        setProcessingPayment(false);
                     }
-                    setLoading(false);
                 },
                 prefill: {
                     name: userName,
@@ -128,10 +142,9 @@ const RazorpayPayment = ({ amount, currency = "INR", receipt, onSuccess, onFailu
                     },
                 },
             };
-            
+
             razorpayRef.current = new window.Razorpay(options);
-            
-            // ⚠️ FIX: Handle Razorpay errors
+ 
             razorpayRef.current.on('payment.failed', (response) => {
                 console.error("Payment failed:", response.error);
                 toast.error(response.error?.description || "Payment failed");
@@ -140,9 +153,9 @@ const RazorpayPayment = ({ amount, currency = "INR", receipt, onSuccess, onFailu
                     onFailure(response.error);
                 }
             });
-            
+
             razorpayRef.current.open();
-            
+
         } catch (error) {
             console.error("Payment error:", error);
             toast.error(error.response?.data?.error || error.message || "Failed to initiate payment");
@@ -154,8 +167,8 @@ const RazorpayPayment = ({ amount, currency = "INR", receipt, onSuccess, onFailu
     };
 
     return (
-        <button 
-            onClick={handlePayment} 
+        <button
+            onClick={handlePayment}
             disabled={loading || !scriptLoaded || amount <= 0}
             className="pay-btn"
             style={{

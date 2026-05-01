@@ -7,7 +7,15 @@ import "./Cart.css";
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { cartItems, addToCart, removeCart, loading: cartLoading } = useContext(CartContext);
+
+  const {
+    cartItems,
+    addToCart,
+    removeCart,
+    updateCartItem,
+    loading: cartLoading,
+  } = useContext(CartContext);
+
   const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
@@ -27,8 +35,31 @@ const Cart = () => {
 
   if (!user) return null;
 
+  const handleDecrement = (item) => {
+    const cartItemId = item.cart_item_id || item.id;
+    const currentQty = item.quantity || 1;
+    
+    if (currentQty > 1) {
+      updateCartItem(cartItemId, { quantity: currentQty - 1 });
+    } else {
+      removeCart(cartItemId);
+    }
+  };
+
+  const handleIncrement = (item) => {
+    const cartItemId = item.cart_item_id || item.id;
+    const currentQty = item.quantity || 1;
+    updateCartItem(cartItemId, { quantity: currentQty + 1 });
+  };
+
+  const handleRemove = (item) => {
+    const cartItemId = item.cart_item_id || item.id;
+    removeCart(cartItemId);
+  };
+
   const subtotal = (cartItems || []).reduce(
-    (acc, item) => acc + (Number(item.price) * (item.quantity || 1)),
+    (acc, item) =>
+      acc + Number(item.price || 0) * (item.quantity || 1),
     0
   );
 
@@ -48,62 +79,73 @@ const Cart = () => {
         <>
           <h1 className="cart-title">Your Cart Items</h1>
 
-          {cartItems.map((item) => (
-            <div key={item.id || item.product_id} className="cart-card">
-              <img
-                src={item.main_image || item.image}
-                alt={item.title}
-                width={150}
-                onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/150";
-                }} />
+          {cartItems.map((item) => {
+            const cartItemId = item.cart_item_id || item.id;
+            const quantity = item.quantity || 1;
 
-              <div className="cart-info">
-                <h3>{item.title}</h3>
-                <h2>{item.name}</h2>
-                <span>₹ {item.price}</span>
-              </div>
+            return (
+              <div key={cartItemId} className="cart-card">
+                <img
+                  src={item.image || item.main_image}
+                  alt={item.title || "Product"}
+                  width={150}
+                  onError={(e) => {
+                    e.target.src = "https://via.placeholder.com/150";
+                  }}
+                />
 
-              <div className="cart-qty">
+                <div className="cart-info">
+                  <h3>{item.title || "No title"}</h3>
+                  <span>₹ {item.price || 0}</span>
+                </div>
+
+                <div className="cart-qty">
+                  <button
+                    disabled={cartLoading}
+                    onClick={() => handleDecrement(item)}
+                  >
+                    −
+                  </button>
+
+                  <span>{quantity}</span>
+
+                  <button
+                    disabled={cartLoading}
+                    onClick={() => handleIncrement(item)}
+                  >
+                    +
+                  </button>
+                </div>
+
                 <button
                   disabled={cartLoading}
-                  onClick={() =>
-                    item.quantity > 1 &&
-                    addToCart({ ...item, quantity: item.quantity - 1 })}>
-                  −
-                </button>
-                <span>{item.quantity || 1}</span>
-                <button
-                  disabled={cartLoading}
-                  onClick={() =>
-                    addToCart({ ...item, quantity: item.quantity + 1 })}>
-                  +
+                  className="remove-btn"
+                  onClick={() => handleRemove(item)}
+                >
+                  Remove
                 </button>
               </div>
-
-              <button
-                disabled={cartLoading}
-                className="remove-btn"
-                onClick={() => removeCart(item.product_id)}>
-                Remove
-              </button>
-            </div>
-          ))}
+            );
+          })}
 
           <div className="payment-summary">
             <h2>Order Summary</h2>
+
             <div className="payment-row">
               <span>Subtotal</span>
               <span>₹ {subtotal}</span>
             </div>
+
             <div className="payment-row">
               <span>Shipping</span>
               <span>₹ {shipping}</span>
             </div>
+
             <div className="payment-row total">
               <span>Total</span>
               <span>₹ {total}</span>
             </div>
+
             <button
               className="pay-btn"
               disabled={(cartItems?.length || 0) === 0}
@@ -113,7 +155,10 @@ const Cart = () => {
             </button>
           </div>
 
-          <button className="home-btn large" onClick={() => navigate("/")}>
+          <button
+            className="home-btn large"
+            onClick={() => navigate("/")}
+          >
             Continue Shopping
           </button>
         </>

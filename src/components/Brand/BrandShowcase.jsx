@@ -1,8 +1,7 @@
 import "./BrandShowcase.css";
 import brandFallback from "../../assets/brandFallback.webp";
 
-
-// BRAND DATA
+ 
 const womenBrands = [
   { id: 1, name: "Zara", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fd/Zara_Logo.svg" },
   { id: 2, name: "H&M", logo: "https://upload.wikimedia.org/wikipedia/commons/5/53/H%26M-Logo.svg" },
@@ -17,8 +16,7 @@ const womenBrands = [
   { id: 11, name: "Calvin Klein", logo: "https://upload.wikimedia.org/wikipedia/commons/2/27/Calvin_Klein_logo.svg" },
   { id: 12, name: "Tommy Hilfiger", logo: "https://upload.wikimedia.org/wikipedia/commons/8/88/Tommy_Hilfiger_Logo.svg" },
 ];
-
-// duplicate list for seamless loop
+ 
 const loopBrands = [...womenBrands, ...womenBrands];
 
 const BrandShowcase = () => {

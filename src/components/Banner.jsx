@@ -7,13 +7,11 @@ import "./Banner.css";
 
 const Banner = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  // 🔹 Memoized banner images (prevents recreation on each render)
+ 
   const bannerImages = useMemo(() => {
     return [ban4, ban1, ban2, ban3];
   }, []);
-
-  // 🔹 Auto slide
+ 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % bannerImages.length);

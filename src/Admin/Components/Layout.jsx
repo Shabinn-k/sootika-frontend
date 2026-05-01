@@ -75,14 +75,7 @@ const Layout = ({ children, isLoading = false }) => {
               </NavLink>
             </li>
 
-            <li>
-              <NavLink 
-                className={({ isActive }) => `link-items1 ${isActive ? "active" : ""}`}
-                to="/admin/feedback"
-              >
-                Feedback
-              </NavLink>
-            </li>
+             
           </ul>
         </nav>
 

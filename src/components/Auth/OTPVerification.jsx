@@ -80,34 +80,45 @@ const OTPVerification = ({ email, onVerifySuccess, onCancel }) => {
   };
 
   const handleVerify = async (e) => {
-    if (loading) return;
-    e.preventDefault();
-    const otpCode = otp.join("");
-    
-    if (otpCode.length < 5) {
-      toast.error("Please enter complete 5-digit OTP");
-      return;
-    }
+  if (loading) return;
+  e.preventDefault();
+  const otpCode = otp.join("");
+  
+  if (otpCode.length < 5) {
+    toast.error("Please enter complete 5-digit OTP");
+    return;
+  }
 
-    setLoading(true);
-    try {
-      await authService.verifyOTP({ email, otp: otpCode });
+  setLoading(true);
+  try {
+    const response = await authService.verifyOTP({ email, otp: otpCode });
+     
+    if (response && response.success) {
       toast.success("Account verified successfully! Please log in.");
       if (onVerifySuccess) {
         onVerifySuccess();
       } else {
         setTimeout(() => navigate("/"), 1500);
       }
-    } catch (err) {
-      toast.error(err.response?.data?.error || "Invalid OTP. Please try again.");
+    } else { 
+      toast.error(response?.error || "Invalid OTP. Please try again.");
       setOtp(["", "", "", "", ""]);
       if (inputRefs.current[0]) {
         inputRefs.current[0].focus();
       }
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) { 
+    console.error("Verification error:", err);
+    const errorMessage = err.response?.data?.error || err.message || "Invalid OTP. Please try again.";
+    toast.error(errorMessage);
+    setOtp(["", "", "", "", ""]);
+    if (inputRefs.current[0]) {
+      inputRefs.current[0].focus();
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleResend = async () => {
     if (!canResend || loading) return;

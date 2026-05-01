@@ -19,11 +19,14 @@ export const wishlistService = {
     return { data: res.data, success: true };
   },
 
-  removeFromWishlist: async (id) => {
-    await initAuth();
-    const res = await api.delete(`/wishlist/${id}`);
-    return { data: res.data, success: true };
-  },
+ removeFromWishlist: async (productId) => {
+  if (!productId) {
+    throw new Error("Product ID is required");
+  }
+  await initAuth();
+  const res = await api.delete(`/wishlist/${productId}`);
+  return { data: res.data, success: true };
+},
 
   clearWishlist: async () => {
     await initAuth();

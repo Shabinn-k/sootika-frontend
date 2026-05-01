@@ -24,19 +24,19 @@ const AdminOrders = () => {
       const ordersList = response.data?.data || [];
 
       const formattedOrders = ordersList.map((order) => ({
-        id: order.id,
-        orderNumber: order.order_number,
-        userName: order.user?.name || "Unknown",
-        userEmail: order.user?.email || "N/A",
-        userPhone: order.user?.phone || "N/A",
-        date: order.created_at,
-        track: (order.track || order.order_status || "pending").toLowerCase(),
-        items: order.items || [],
-        total: Number(order.total || 0),
-        paymentMethod: order.payment_method,
-        paymentStatus: order.payment_status,
-        shippingAddress: order.shipping_address,
-      }));
+  id: order.id,
+  orderNumber: order.order_number,
+  userName: order.user?.name || "Unknown",
+  userEmail: order.user?.email || "N/A",
+  userPhone: order.user?.phone || "N/A",
+  date: order.created_at,
+  track: (order.order_status || "pending").toLowerCase(),
+  items: order.items || [],
+  total: Number(order.total || 0),
+  paymentMethod: order.payment_method,
+  paymentStatus: order.payment_status || order.paymentStatus || "pending", 
+  shippingAddress: order.shipping_address,
+}));
 
       setOrders(formattedOrders);
     } catch (err) {
@@ -58,33 +58,31 @@ const AdminOrders = () => {
       fetchOrders();
     }
   }, [authLoading, admin]);
-
-  const updateOrderStatus = async (orderId, newStatus) => {
-    if (updatingId) return;
-
-    try {
-      setUpdatingId(orderId);
-      await initAuth();
-
-      await api.put(`/admin/orders/${orderId}/status`, {
-        status: newStatus,
-      });
-
-      setOrders((prev) =>
-        prev.map((order) =>
-          order.id === orderId
-            ? { ...order, track: newStatus.toLowerCase() }
-            : order
-        )
-      );
-
-      toast.success(`Order ${newStatus} updated`);
-    } catch (err) {
-      toast.error(err.response?.data?.error || "Failed to update order");
-    } finally {
-      setUpdatingId(null);
+const updateOrderStatus = async (orderId, newStatus) => {
+  try {
+    setUpdatingId(orderId);
+    await initAuth();
+    
+    // Capitalize first letter (Pending, Confirmed, Shipped, Delivered, Cancelled)
+    const capitalizedStatus = newStatus.charAt(0).toUpperCase() + newStatus.slice(1).toLowerCase();
+    
+    // FIX: Add /admin/ to the URL
+    const response = await api.put(`/admin/orders/${orderId}/status`, { 
+      status: capitalizedStatus 
+    });
+    
+    if (response.status === 200) {
+      toast.success(`Order ${capitalizedStatus} successfully`);
+      await fetchOrders(); // Refresh the list
     }
-  };
+  } catch (err) {
+    console.error("Update error:", err);
+    toast.error(err.response?.data?.error || "Failed to update order status");
+  } finally {
+    setUpdatingId(null);
+  }
+
+};
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -151,20 +149,19 @@ const AdminOrders = () => {
                 <p><strong>Email:</strong> {order.userEmail}</p>
                 <p><strong>Phone:</strong> {order.userPhone}</p>
               </div>
-
-              {/* PAYMENT */}
-              <div className="order-payment-info">
-                <p>
-                  <strong>Payment:</strong>{" "}
-                  {order.paymentMethod?.toUpperCase() || "COD"}
-                </p>
-                <p>
-                  <strong>Status:</strong>
-                  <span className={`payment-status ${order.paymentStatus}`}>
-                    {order.paymentStatus || "pending"}
-                  </span>
-                </p>
-              </div>
+ 
+             <div className="order-payment-info">
+  <p>
+    <strong>Payment:</strong>{" "}
+    {order.paymentMethod?.toUpperCase() || "COD"}
+  </p>
+  <p>
+    <strong>Status:</strong>
+    <span className={`payment-status ${order.paymentStatus}`}>
+      {order.paymentStatus || "pending"}   
+    </span>
+  </p>
+</div>
 
               {/* TOTAL */}
               <div className="order-total">
@@ -173,24 +170,21 @@ const AdminOrders = () => {
                   ₹ {order.total.toLocaleString()}
                 </span>
               </div>
-
-              {/* STATUS UPDATE */}
+ 
               <div className="order-status-update">
                 <label>Update Status:</label>
-                <select
-                  value={order.track}
-                  disabled={updatingId === order.id}
-                  onChange={(e) =>
-                    updateOrderStatus(order.id, e.target.value)
-                  }
-                  className="status-select"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="shipped">Shipped</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
+               <select 
+  value={(order.track || order.order_status || "pending").toLowerCase()} 
+  disabled={updatingId === order.id}
+  onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+  className="status-select"
+>
+  <option value="pending">Pending</option>
+  <option value="confirmed">Confirmed</option>
+  <option value="shipped">Shipped</option>
+  <option value="delivered">Delivered</option>
+  <option value="cancelled">Cancelled</option>
+</select>
 
                 {updatingId === order.id && (
                   <span className="loading-small">Updating...</span>

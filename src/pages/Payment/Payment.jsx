@@ -1,4 +1,4 @@
-// src/pages/Payment/Payment.jsx - FIXED Navigation
+// src/pages/Payment/Payment.jsx - FIXED
 import React, { useContext, useEffect, useState } from "react";
 import "./Payment.css";
 import { CartContext } from "../../context/CartContext";
@@ -17,7 +17,7 @@ const Payment = () => {
 
   const items = state?.product
     ? [{ ...state.product, quantity: state.quant || 1 }]
-    : cartItems;
+    : (cartItems && cartItems.length > 0 ? cartItems : []);
 
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -42,6 +42,13 @@ const Payment = () => {
       navigate("/");
     }
   }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (!authLoading && !cartLoading && items.length === 0) {
+      toast.error("No items to checkout");
+      navigate("/cart");
+    }
+  }, [items, authLoading, cartLoading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -132,31 +139,39 @@ const Payment = () => {
       toast.error("Failed to update default address");
     }
   };
+  const createOrder = async (paymentData = null) => {
+    if (!selectedAddress) {
+      throw new Error("Please select a delivery address");
+    }
 
-  const createOrder = async (paymentId = null, razorpayOrderId = null) => {
+    if (!items || items.length === 0) {
+      throw new Error("No items in cart");
+    }
+
     const orderData = {
       items: items.map(item => ({
         product_id: item.product_id || item.id,
-        quantity: item.quantity
+        quantity: item.quantity || 1
       })),
       address_id: selectedAddress.id,
       payment_method: paymentMethod === "razorpay" ? "razorpay" : "cod"
     };
 
-    if (paymentId) {
-      orderData.payment_id = paymentId;
-      orderData.razorpay_order_id = razorpayOrderId;
+    if (paymentData) {
+      orderData.payment_id = paymentData.payment_id;
+      orderData.razorpay_order_id = paymentData.razorpay_order_id;
+      orderData.razorpay_signature = paymentData.razorpay_signature;
     }
 
     const response = await api.post("/orders", orderData);
-    return response.data.order;
+    return response.data;
   };
 
   const handlePaymentSuccess = async (paymentData) => {
     setProcessingPayment(true);
     try {
-      const order = await createOrder(paymentData?.payment_id, paymentData?.order_id);
-      console.log("Order created:", order);
+      const orderResult = await createOrder(paymentData?.payment_id, paymentData?.order_id);
+      console.log("Order created:", orderResult);
 
       toast.success("Order placed successfully!");
 
@@ -170,7 +185,7 @@ const Payment = () => {
 
     } catch (error) {
       console.error("Order creation error:", error);
-      toast.error(error.response?.data?.message || "Payment successful but order creation failed");
+      toast.error(error.response?.data?.message || error.message || "Payment successful but order creation failed");
       setProcessingPayment(false);
     }
   };
@@ -187,20 +202,26 @@ const Payment = () => {
       if (clearCart) await clearCart();
       navigate("/myOrders", { replace: true });
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to place order");
+      console.error("COD order error:", error);
+      toast.error(error.response?.data?.error || error.message || "Failed to place order");
       setProcessingPayment(false);
     }
   };
 
   const handleProceedToPayment = () => {
     if (processingPayment) return;
-    setProcessingPayment(true);
+
     if (!paymentMethod) {
       toast.error("Select payment method");
       return;
     }
     if (!selectedAddress) {
       toast.error("Select delivery address");
+      return;
+    }
+    if (!items || items.length === 0) {
+      toast.error("No items to checkout");
+      navigate("/cart");
       return;
     }
 
@@ -229,6 +250,13 @@ const Payment = () => {
   const handleRazorpayPayment = async () => {
     setProcessingPayment(true);
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login again to complete payment");
+      navigate("/login");
+      return;
+    }
+
     try {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
@@ -237,12 +265,16 @@ const Payment = () => {
         return;
       }
 
+      await initAuth();
+
       const amountInPaise = Math.round(total * 100);
       const response = await api.post("/payment/create-order", {
         amount: amountInPaise,
         currency: "INR",
         receipt: `order_${Date.now()}`
       });
+
+      console.log("Create order response:", response.data);
 
       const { order_id, amount: orderAmount, currency: orderCurrency } = response.data;
 
@@ -254,25 +286,47 @@ const Payment = () => {
         description: "Payment for your order",
         order_id: order_id,
         handler: async (razorpayResponse) => {
+          console.log("Razorpay response:", razorpayResponse);
+
           try {
-            const verifyResult = await paymentService.verifyPayment({
+            await initAuth();
 
-              order_id: razorpayResponse.razorpay_order_id,
+            const orderData = {
+              items: items.map(item => ({
+                product_id: item.product_id || item.id,
+                quantity: item.quantity || 1,
+                price: item.price
+              })),
+              address_id: selectedAddress.id,
+              payment_method: "razorpay",
               payment_id: razorpayResponse.razorpay_payment_id,
-              signature: razorpayResponse.razorpay_signature
-            });
-            if (!verifyResult.success) {
-              throw new Error("Payment verification failed");
+              razorpay_order_id: razorpayResponse.razorpay_order_id,
+              razorpay_signature: razorpayResponse.razorpay_signature
+            };
+
+            console.log("Creating order with data:", orderData);
+
+            const orderResponse = await api.post("/orders", orderData);
+
+            console.log("Order created response:", orderResponse.data);
+
+            if (orderResponse.status === 200 || orderResponse.status === 201) {
+              toast.success("Payment successful! Order placed successfully.");
+
+              if (clearCart) {
+                await clearCart();
+              }
+
+              setTimeout(() => {
+                navigate("/myOrders", { replace: true });
+              }, 500);
+            } else {
+              throw new Error(orderResponse.data?.message || "Order creation failed");
             }
-            toast.success("Payment successful!");
-            await handlePaymentSuccess({
-              payment_id: razorpayResponse.razorpay_payment_id,
-              order_id: razorpayResponse.razorpay_order_id
-            });
-
           } catch (error) {
-            console.error("Verification error:", error);
-            toast.error("Payment verification failed");
+            console.error("Payment/Order error:", error);
+            console.log("Error response data:", error.response?.data);
+            toast.error(error.response?.data?.message || error.response?.data?.error || "Payment verification failed");
             setProcessingPayment(false);
           }
         },
@@ -299,6 +353,17 @@ const Payment = () => {
   }
 
   if (!user) return null;
+
+  if (items.length === 0) {
+    return (
+      <div className="payment-page">
+        <div className="empty-msg-container">
+          <h2>No items to checkout</h2>
+          <button className="home-btn" onClick={() => navigate("/cart")}>Go to Cart</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="payment-page">
@@ -369,7 +434,7 @@ const Payment = () => {
             <div key={item.product_id || item.id} className="summary-item">
               <img src={item.main_image || item.image} alt={item.title} width="60" />
               <div><h4>{item.title}</h4><p>Qty: {item.quantity}</p><p>₹{item.price}</p></div>
-              <span>₹{(item.price * item.quantity)}</span>
+              <span>₹{(item.price * (item.quantity || 1))}</span>
             </div>
           ))}
           <div className="summary-total"><p>Subtotal: ₹{subTotal}</p><p>Shipping: ₹{shipping}</p><h3>Total: ₹{total}</h3></div>

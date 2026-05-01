@@ -62,9 +62,6 @@ const EditProduct = () => {
     }
   }, [id, navigate, admin, authLoading]);
 
-  /* =====================
-     UPDATE PRODUCT INFO
-  ===================== */
   const updateProduct = async () => {
     if (!product.title || !product.price) {
       toast.error("Title and price are required");
@@ -85,7 +82,7 @@ const EditProduct = () => {
 
     try {
       setSaving(true);
-      await initAuth(); // ⚠️ FIX: Wait for auth
+      await initAuth(); 
       await api.put(`/admin/products/${id}`, {
         title: product.title.trim(),
         name: product.name?.trim() || "",
