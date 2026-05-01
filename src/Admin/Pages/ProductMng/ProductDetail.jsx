@@ -16,26 +16,22 @@ const ProductDetail = () => {
   const [mainImg, setMainImg] = useState("");
   const [error, setError] = useState("");
 
-  // ⚠️ FIX: Check admin access
-  useEffect(() => {
-    if (!authLoading && !admin) {
-      toast.error("Access denied. Admin only.");
-      navigate("/");
-    }
-  }, [admin, authLoading, navigate]);
-
   useEffect(() => {
     const fetchProduct = async () => {
       if (!admin) return;
-      
+
       try {
         setLoading(true);
-        await initAuth(); // ⚠️ FIX: Wait for auth
+        await initAuth();
+
         const res = await api.get(`/products/${id}`);
         setProduct(res.data);
-        setMainImg(res.data.main_image || res.data.image);
+
+        const main = res.data.main_image || res.data.image || "";
+        setMainImg(main);
       } catch (err) {
         console.error(err);
+
         if (err.response?.status === 401) {
           toast.error("Session expired. Please login again.");
           navigate("/login");
@@ -53,11 +49,8 @@ const ProductDetail = () => {
     }
   }, [id, admin, authLoading, navigate]);
 
-  // ⚠️ FIX: Helper to check stock
-  const isInStock = product?.in_stock || product?.stock > 0;
-  const mainImage = product?.main_image || product?.image;
+  const isInStock = (p) => p?.in_stock || p?.stock > 0;
 
-  // ⚠️ FIX: Loading states
   if (authLoading) {
     return (
       <Layout>
@@ -86,7 +79,7 @@ const ProductDetail = () => {
         <div className="product-detail">
           <div className="error-container">
             <p>{error || "Product not found"}</p>
-            <button 
+            <button
               className="back-btn"
               onClick={() => navigate("/admin/products")}
             >
@@ -98,68 +91,90 @@ const ProductDetail = () => {
     );
   }
 
+  const mainImage = product.main_image || product.image;
+
   return (
     <Layout>
       <div className="product-detail">
-        <div className="product-images">
-          <div className="product-image">
+        {/* MAIN IMAGE */}
+        <div className="product-image">
+          {mainImg ? (
             <img
               src={mainImg}
               alt={product.title}
               onError={(e) => {
-                e.target.src = "https://via.placeholder.com/500?text=No+Image";
+                e.target.style.display = "none";
               }}
             />
-          </div>
-          
-          {(product.second_image || product.third_image) && (
-            <div className="product-thumbnails">
-              {/* ⚠️ FIX: Use mainImage variable */}
-              {mainImage && (
-                <img 
-                  src={mainImage}
-                  alt="Main view"
-                  className={`thumbnail ${mainImg === mainImage ? "active" : ""}`}
-                  onClick={() => setMainImg(mainImage)}
-                />
-              )}
-              {product.second_image && (
-                <img 
-                  src={product.second_image}
-                  alt="Second view"
-                  className={`thumbnail ${mainImg === product.second_image ? "active" : ""}`}
-                  onClick={() => setMainImg(product.second_image)}
-                />
-              )}
-              {product.third_image && (
-                <img 
-                  src={product.third_image}
-                  alt="Third view"
-                  className={`thumbnail ${mainImg === product.third_image ? "active" : ""}`}
-                  onClick={() => setMainImg(product.third_image)}
-                />
-              )}
+          ) : (
+            <div style={{ textAlign: "center", padding: "40px" }}>
+              No Image
             </div>
           )}
         </div>
 
+        {(product.second_image || product.third_image) && (
+          <div className="product-thumbnails">
+            {mainImage && (
+              <img
+                src={mainImage}
+                alt="Main"
+                className={`thumbnail ${
+                  mainImg === mainImage ? "active" : ""
+                }`}
+                onClick={() => setMainImg(mainImage)}
+              />
+            )}
+
+            {product.second_image && (
+              <img
+                src={product.second_image}
+                alt="Second"
+                className={`thumbnail ${
+                  mainImg === product.second_image ? "active" : ""
+                }`}
+                onClick={() => setMainImg(product.second_image)}
+              />
+            )}
+
+            {product.third_image && (
+              <img
+                src={product.third_image}
+                alt="Third"
+                className={`thumbnail ${
+                  mainImg === product.third_image ? "active" : ""
+                }`}
+                onClick={() => setMainImg(product.third_image)}
+              />
+            )}
+          </div>
+        )}
+
         <h2>{product.title}</h2>
+
         {product.name && (
           <p className="product-subtitle">{product.name}</p>
         )}
 
         <p className="product-info">
-          <span>Description:</span> 
+          <span>Description:</span>{" "}
           {product.description || "No description provided"}
         </p>
 
         <p className="product-info">
-          <span>Price:</span> ₹ {product.price?.toLocaleString()}
+          <span>Price:</span> ₹{" "}
+          {Number(product.price || 0).toLocaleString()}
         </p>
 
-        <div className={`stock-badge ${isInStock ? "stock-in" : "stock-out"}`}>
-          {isInStock ? "✓ In Stock" : "✗ Out of Stock"}
-          {product.stock > 0 && <span> ({product.stock} available)</span>}
+        <div
+          className={`stock-badge ${
+            isInStock(product) ? "stock-in" : "stock-out"
+          }`}
+        >
+          {isInStock(product) ? "✓ In Stock" : "✗ Out of Stock"}
+          {product.stock > 0 && (
+            <span> ({product.stock} available)</span>
+          )}
         </div>
 
         <div className="detail-actions">
@@ -169,6 +184,7 @@ const ProductDetail = () => {
           >
             ✏️ Edit Product
           </button>
+
           <button
             className="back-btn"
             onClick={() => navigate("/admin/products")}

@@ -44,6 +44,7 @@ const AdminProducts = () => {
   };
 
   const deleteProduct = async (id) => {
+    if (deletingId) return;
     if (!window.confirm("Delete this product? This action cannot be undone.")) return;
 
     try {
@@ -67,7 +68,7 @@ const AdminProducts = () => {
   }, [authLoading, admin]);
 
   const filteredProducts = (Array.isArray(products) ? products : []).filter(p =>
-    p.title?.toLowerCase().includes(search.toLowerCase()) ||
+   (p.title || "").toLowerCase().includes(search.toLowerCase()) ||
     p.name?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -132,16 +133,16 @@ const AdminProducts = () => {
                         src={p.main_image || p.image}
                         alt={p.title}
                         className="product-image"
-                        onError={(e) => {
-                          e.target.src = "https://via.placeholder.com/50";
-                        }}
+                       onError={(e) => {
+  e.target.style.display = "none";
+}}
                       />
                     </td>
                     <td className="clickable" onClick={() => navigate(`/admin/products/${p.id}`)}>
                       {p.title}
                     </td>
                     <td className="clickable" onClick={() => navigate(`/admin/products/${p.id}`)}>
-                      ₹ {p.price?.toLocaleString()}
+                     ₹ {Number(p.price || 0).toLocaleString()}
                     </td>
                     <td className={inStock ? "stock-in" : "stock-out"}>
                       {inStock ? `In Stock (${p.stock || 0})` : "Out of Stock"}

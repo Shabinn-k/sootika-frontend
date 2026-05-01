@@ -1,14 +1,13 @@
 import { api, initAuth } from "./Axios";
 
 export const addressService = {
-    // ⚠️ CRITICAL FIX 1: Remove duplicate /api prefix
     getMyAddresses: async () => {
         try {
-            await initAuth(); // ⚠️ CRITICAL FIX 2: Wait for auth
+            await initAuth(); 
             const response = await api.get("/addresses");
             return { 
                 success: true, 
-                data: response.data?.addresses || response.data?.data || [] 
+                data: response.data?.addresses ??  [] 
             };
         } catch (error) {
             console.error("Get addresses error:", error);

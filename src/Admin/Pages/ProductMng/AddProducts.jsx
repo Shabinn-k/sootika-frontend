@@ -24,16 +24,14 @@ const AddProduct = () => {
   const [mainPreview, setMainPreview] = useState(null);
   const [secondPreview, setSecondPreview] = useState(null);
   const [thirdPreview, setThirdPreview] = useState(null);
-
-  // ⚠️ FIX: Check admin access
+ 
   useEffect(() => {
     if (!authLoading && !admin) {
       toast.error("Access denied. Admin only.");
       navigate("/");
     }
   }, [admin, authLoading, navigate]);
-
-  // ⚠️ FIX: Cleanup image previews on unmount
+ 
   useEffect(() => {
     return () => {
       if (mainPreview) URL.revokeObjectURL(mainPreview);
@@ -41,11 +39,10 @@ const AddProduct = () => {
       if (thirdPreview) URL.revokeObjectURL(thirdPreview);
     };
   }, [mainPreview, secondPreview, thirdPreview]);
-
-  // ⚠️ FIX: Validate image file
+ 
   const validateImage = (file) => {
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
-    const maxSize = 2 * 1024 * 1024; // 2MB
+    const maxSize = 2 * 1024 * 1024; 
 
     if (!allowedTypes.includes(file.type)) {
       toast.error("Only JPEG, PNG, and WEBP images are allowed");
@@ -66,8 +63,7 @@ const AddProduct = () => {
       e.target.value = "";
       return;
     }
-    
-    // Cleanup old preview
+     
     if (currentPreview) {
       URL.revokeObjectURL(currentPreview);
     }
@@ -76,8 +72,7 @@ const AddProduct = () => {
     setPreview(URL.createObjectURL(file));
   };
 
-  const addProduct = async () => {
-    // ⚠️ FIX: Check admin again before action
+  const addProduct = async () => { 
     if (!admin) {
       toast.error("Access denied. Admin only.");
       return;
@@ -90,7 +85,7 @@ const AddProduct = () => {
 
     try {
       setLoading(true);
-      await initAuth(); // ⚠️ FIX: Wait for auth
+      await initAuth(); 
 
       const formData = new FormData();
       formData.append("title", title);
@@ -117,8 +112,7 @@ const AddProduct = () => {
       setLoading(false);
     }
   };
-
-  // ⚠️ FIX: Show loading state
+ 
   if (authLoading) {
     return (
       <Layout>

@@ -11,12 +11,13 @@ const Detail = () => {
   const navigate = useNavigate();
 
   const { addToCart, loading: cartLoading } = useContext(CartContext);
-  const { user, loading: authLoading } = useAuth(); // ⚠️ ADD authLoading
+  const { user, loading: authLoading } = useAuth();
 
   const [product, setProduct] = useState(null);
   const [quant, setQuant] = useState(1);
   const [mainImg, setMainImg] = useState("");
-  const [loading, setLoading] = useState(true); // ⚠️ ADD loading state
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -42,7 +43,6 @@ const Detail = () => {
       toast.warn("Please login to continue!");
       return;
     }
-    // ⚠️ FIX: Check stock correctly (handle both boolean and number)
     const isOutOfStock = product.stock === false || product.stock === 0;
     if (isOutOfStock) {
       toast.error("Product is out of stock");
@@ -51,29 +51,31 @@ const Detail = () => {
     navigate("/payment", { state: { product, quant } });
   };
 
-  const handleAddToCart = async () => { // ⚠️ Make async
+  const handleAddToCart = async () => {
     if (!user) {
       toast.warn("Please login to continue!");
       return;
     }
-    
-    // ⚠️ FIX: Check stock correctly
+
+    if (adding) return;
+
     const isOutOfStock = product.stock === false || product.stock === 0;
     if (isOutOfStock) {
       toast.error("Product is out of stock");
       return;
     }
-    
-    // ⚠️ FIX: Show loading state
+
     try {
+      setAdding(true);
       await addToCart({ ...product, quantity: quant });
       toast.success("Added to cart!");
     } catch {
       toast.error("Failed to add to cart");
+    } finally {
+      setAdding(false);
     }
   };
 
-  // ⚠️ FIX: Show loading state
   if (loading || authLoading) {
     return (
       <div className="detail-page">
@@ -88,7 +90,6 @@ const Detail = () => {
     return null;
   }
 
-  // ⚠️ FIX: Helper function for stock check
   const isOutOfStock = product.stock === false || product.stock === 0;
   const stockStatus = isOutOfStock ? "out" : "";
   const stockText = isOutOfStock ? "Out of Stock" : "In Stock";
@@ -100,9 +101,9 @@ const Detail = () => {
       </button>
 
       <div className="left">
-        <img 
-          src={mainImg} 
-          alt={product.title} 
+        <img
+          src={mainImg}
+          alt={product.title}
           className="main-img"
           onError={(e) => {
             e.target.src = "https://via.placeholder.com/500";
@@ -150,17 +151,23 @@ const Detail = () => {
             −
           </button>
           <span>{quant}</span>
-          <button onClick={() => setQuant((q) => q + 1)} disabled={isOutOfStock}>
+          <button onClick={() =>
+            setQuant((q) =>
+              product.stock && typeof product.stock === "number"
+                ? Math.min(product.stock, q + 1)
+                : q + 1
+            )
+          } disabled={isOutOfStock}>
             +
           </button>
         </div>
         <div className="btn-row">
           <button
             className="add-btn"
-            disabled={isOutOfStock || cartLoading}
+            disabled={isOutOfStock || cartLoading || adding}
             onClick={handleAddToCart}
           >
-            {cartLoading ? "Adding..." : "Add to Cart"}
+            {adding ? "Adding..." : "Add to Cart"}
           </button>
           <button
             className="pay"

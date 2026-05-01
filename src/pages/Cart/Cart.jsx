@@ -10,7 +10,6 @@ const Cart = () => {
   const { cartItems, addToCart, removeCart, loading: cartLoading } = useContext(CartContext);
   const { user, loading: authLoading } = useAuth();
 
-  // ⚠️ FIX: Redirect only after auth loads
   useEffect(() => {
     if (!authLoading && !user) {
       toast.warn("Please login to view cart");
@@ -18,7 +17,6 @@ const Cart = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // ⚠️ FIX: Show loading states
   if (authLoading || cartLoading) {
     return (
       <div className="cart-page">
@@ -30,7 +28,7 @@ const Cart = () => {
   if (!user) return null;
 
   const subtotal = (cartItems || []).reduce(
-    (acc, item) => acc + (item.price * (item.quantity || 1)),
+    (acc, item) => acc + (Number(item.price) * (item.quantity || 1)),
     0
   );
 
@@ -52,14 +50,13 @@ const Cart = () => {
 
           {cartItems.map((item) => (
             <div key={item.id || item.product_id} className="cart-card">
-              <img 
-                src={item.main_image || item.image} 
-                alt={item.title} 
+              <img
+                src={item.main_image || item.image}
+                alt={item.title}
                 width={150}
                 onError={(e) => {
                   e.target.src = "https://via.placeholder.com/150";
-                }}
-              />
+                }} />
 
               <div className="cart-info">
                 <h3>{item.title}</h3>
@@ -69,27 +66,25 @@ const Cart = () => {
 
               <div className="cart-qty">
                 <button
+                  disabled={cartLoading}
                   onClick={() =>
                     item.quantity > 1 &&
-                    addToCart({ ...item, quantity: -1 })
-                  }
-                >
+                    addToCart({ ...item, quantity: item.quantity - 1 })}>
                   −
                 </button>
                 <span>{item.quantity || 1}</span>
                 <button
+                  disabled={cartLoading}
                   onClick={() =>
-                    addToCart({ ...item, quantity: 1 })
-                  }
-                >
+                    addToCart({ ...item, quantity: item.quantity + 1 })}>
                   +
                 </button>
               </div>
 
               <button
+                disabled={cartLoading}
                 className="remove-btn"
-                onClick={() => removeCart(item.id || item.product_id)}
-              >
+                onClick={() => removeCart(item.product_id)}>
                 Remove
               </button>
             </div>
@@ -109,7 +104,11 @@ const Cart = () => {
               <span>Total</span>
               <span>₹ {total}</span>
             </div>
-            <button className="pay-btn" onClick={() => navigate("/payment")}>
+            <button
+              className="pay-btn"
+              disabled={(cartItems?.length || 0) === 0}
+              onClick={() => navigate("/payment")}
+            >
               Proceed to Payment
             </button>
           </div>

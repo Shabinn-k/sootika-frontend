@@ -12,11 +12,9 @@ const Layout = ({ children, isLoading = false }) => {
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to logout?")) {
       logoutUser();
-      navigate("/", { replace: true });
     }
   };
 
-  // Show global loading state
   if (authLoading || isLoading) {
     return (
       <div className="admin-wrapper">

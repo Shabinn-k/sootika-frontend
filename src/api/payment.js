@@ -1,9 +1,7 @@
 import { api, initAuth } from "./Axios";
 
 export const paymentService = {
-    // ⚠️ CRITICAL FIX: Remove duplicate /api prefix and add auth wait
     createOrder: async (amount, currency = "INR", receipt = null) => {
-        // Validate amount
         if (!amount || amount <= 0) {
             return { 
                 success: false, 
@@ -14,7 +12,7 @@ export const paymentService = {
         try {
             await initAuth();
             const response = await api.post("/payment/create-order", { 
-                amount: Math.round(amount), // Ensure integer
+                amount: Math.round(amount), 
                 currency, 
                 receipt: receipt || `receipt_${Date.now()}`
             });
@@ -33,9 +31,8 @@ export const paymentService = {
         }
     },
     
-    // ⚠️ CRITICAL FIX: Standardize parameter naming
     verifyPayment: async (paymentData) => {
-        // Support both naming conventions
+
         const orderId = paymentData.order_id || paymentData.orderId;
         const paymentId = paymentData.payment_id || paymentData.paymentId;
         const signature = paymentData.signature || paymentData.razorpay_signature;
@@ -68,7 +65,6 @@ export const paymentService = {
         }
     },
 
-    // ⚠️ CRITICAL ADD: Get payment status
     getPaymentStatus: async (paymentId) => {
         try {
             await initAuth();
@@ -86,7 +82,6 @@ export const paymentService = {
         }
     },
 
-    // ⚠️ CRITICAL ADD: Refund payment
     refundPayment: async (paymentId, amount = null, reason = "") => {
         try {
             await initAuth();
@@ -108,10 +103,7 @@ export const paymentService = {
         }
     },
 
-    // Verify webhook signature (for backend, not frontend)
     verifyWebhookSignature: () => {
-        // This should be done on backend only
-        // Frontend should never verify webhooks
         console.warn("Webhook verification should only happen on backend");
         return false;
     }

@@ -7,10 +7,9 @@ import "./Wishlist.css";
 
 const Wishlist = () => {
   const navigate = useNavigate();
-  const { wishItems, removeWish, addToCart, loading: cartLoading } = useContext(CartContext); // ⚠️ ADD cartLoading
-  const { user, loading: authLoading } = useAuth(); // ⚠️ Rename to authLoading
+  const { wishItems, removeWish, addToCart, loading: cartLoading } = useContext(CartContext);  
+  const { user, loading: authLoading } = useAuth(); 
 
-  // ⚠️ FIX: Wait for both auth AND cart to load
   useEffect(() => {
     if (!authLoading && !user) {
       toast.warn("Please login to view wishlist");
@@ -18,7 +17,6 @@ const Wishlist = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // ⚠️ FIX: Show loading states
   if (authLoading || cartLoading) {
     return (
       <div className="wish-page">
@@ -30,24 +28,21 @@ const Wishlist = () => {
   if (!user) return null;
 
   const handleMoveToCart = async (item) => {
-    // ⚠️ FIX: Check stock before moving
     const isOutOfStock = item.stock === false || item.stock === 0;
     if (isOutOfStock) {
       toast.error("Product is out of stock");
       return;
     }
     
-    try {
-      await addToCart({ ...item, quantity: 1 });
-      await removeWish(item.id); // ⚠️ Wait for removal
-      toast.success("Moved to cart");
-    } catch (err) {
-      console.error("Move to cart error:", err);
-      toast.error(err.response?.data?.message || "Failed to move item");
-    }
+   try {
+  await addToCart({ ...item, quantity: 1 });
+  await removeWish(item.product_id);
+  toast.success("Moved to cart");
+} catch (err) {
+  toast.error("Failed to move item");
+}
   };
 
-  // ⚠️ FIX: Safe access with optional chaining
   const hasItems = (wishItems?.length || 0) > 0;
 
   return (
@@ -90,14 +85,12 @@ const Wishlist = () => {
                   <button
                     className="tocart-btn"
                     onClick={() => handleMoveToCart(item)}
-                    disabled={isOutOfStock}
-                  >
+                    disabled={isOutOfStock} >
                     Add to Cart
                   </button>
-                  <button
+                  <button disabled={cartLoading}
                     className="remove-btn"
-                    onClick={() => removeWish(item.id)}
-                  >
+                    onClick={() => removeWish(item.product_id)}>
                     Remove
                   </button>
                 </div>

@@ -80,7 +80,10 @@ const Payment = () => {
     }
   }, [user, authLoading]);
 
-  const subTotal = items.reduce((a, i) => a + (i.price * (i.quantity || 1)), 0);
+  const subTotal = items.reduce(
+    (a, i) => a + (Number(i.price) * (i.quantity || 1)),
+    0
+  );
   const shipping = 80;
   const total = subTotal + shipping;
 
@@ -133,7 +136,7 @@ const Payment = () => {
   const createOrder = async (paymentId = null, razorpayOrderId = null) => {
     const orderData = {
       items: items.map(item => ({
-        product_id: item.id,
+        product_id: item.product_id || item.id,
         quantity: item.quantity
       })),
       address_id: selectedAddress.id,
@@ -149,26 +152,22 @@ const Payment = () => {
     return response.data.order;
   };
 
-  // ⚠️ FIXED: Proper navigation after payment success
   const handlePaymentSuccess = async (paymentData) => {
     setProcessingPayment(true);
     try {
-      // Create order
       const order = await createOrder(paymentData?.payment_id, paymentData?.order_id);
       console.log("Order created:", order);
-      
+
       toast.success("Order placed successfully!");
-      
-      // Clear cart
+
       if (clearCart) {
         await clearCart();
       }
-      
-      // ⚠️ FIX: Use setTimeout to ensure state updates before navigation
+
       setTimeout(() => {
         navigate("/myOrders", { replace: true });
       }, 500);
-      
+
     } catch (error) {
       console.error("Order creation error:", error);
       toast.error(error.response?.data?.message || "Payment successful but order creation failed");
@@ -194,6 +193,8 @@ const Payment = () => {
   };
 
   const handleProceedToPayment = () => {
+    if (processingPayment) return;
+    setProcessingPayment(true);
     if (!paymentMethod) {
       toast.error("Select payment method");
       return;
@@ -202,7 +203,7 @@ const Payment = () => {
       toast.error("Select delivery address");
       return;
     }
-    
+
     if (paymentMethod === "cod") {
       handleCODOrder();
     } else {
@@ -227,7 +228,7 @@ const Payment = () => {
 
   const handleRazorpayPayment = async () => {
     setProcessingPayment(true);
-    
+
     try {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
@@ -254,21 +255,21 @@ const Payment = () => {
         order_id: order_id,
         handler: async (razorpayResponse) => {
           try {
-            // Verify payment
             const verifyResult = await paymentService.verifyPayment({
-  order_id: razorpayResponse.razorpay_order_id,
-  payment_id: razorpayResponse.razorpay_payment_id,
-  signature: razorpayResponse.razorpay_signature
-});
-            
+
+              order_id: razorpayResponse.razorpay_order_id,
+              payment_id: razorpayResponse.razorpay_payment_id,
+              signature: razorpayResponse.razorpay_signature
+            });
+            if (!verifyResult.success) {
+              throw new Error("Payment verification failed");
+            }
             toast.success("Payment successful!");
-            
-            // Create order and navigate
             await handlePaymentSuccess({
               payment_id: razorpayResponse.razorpay_payment_id,
               order_id: razorpayResponse.razorpay_order_id
             });
-            
+
           } catch (error) {
             console.error("Verification error:", error);
             toast.error("Payment verification failed");
@@ -276,11 +277,11 @@ const Payment = () => {
           }
         },
         theme: { color: "#c9a47a" },
-        modal: { 
-          ondismiss: () => { 
-            toast.info("Payment cancelled"); 
+        modal: {
+          ondismiss: () => {
+            toast.info("Payment cancelled");
             setProcessingPayment(false);
-          } 
+          }
         }
       };
 
@@ -324,37 +325,38 @@ const Payment = () => {
 
           {showForm && (
             <div className="address-form">
-              <input 
-                placeholder="Full Name" 
+              <input
+                placeholder="Full Name"
                 value={addressForm.name}
-                onChange={e => setAddressForm({ ...addressForm, name: e.target.value })} 
+                onChange={e => setAddressForm({ ...addressForm, name: e.target.value })}
               />
-              <textarea 
-                placeholder="Address *" 
-                onChange={e => setAddressForm({ ...addressForm, address: e.target.value })} 
+              <textarea
+                placeholder="Address *"
+                value={addressForm.address}
+                onChange={e => setAddressForm({ ...addressForm, address: e.target.value })}
               />
-              <input 
-                placeholder="City *" 
-                onChange={e => setAddressForm({ ...addressForm, city: e.target.value })} 
+              <input
+                placeholder="City *"
+                onChange={e => setAddressForm({ ...addressForm, city: e.target.value })}
               />
-              <input 
-                placeholder="State *" 
-                onChange={e => setAddressForm({ ...addressForm, state: e.target.value })} 
+              <input
+                placeholder="State *"
+                onChange={e => setAddressForm({ ...addressForm, state: e.target.value })}
               />
-              <input 
-                placeholder="Pincode *" 
+              <input
+                placeholder="Pincode *"
                 value={addressForm.pincode}
-                onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })} 
-                maxLength={6} 
+                onChange={e => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                maxLength={6}
               />
-              <input 
-                placeholder="Phone" 
+              <input
+                placeholder="Phone"
                 value={addressForm.phone}
-                onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })} 
-                maxLength={10} 
+                onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })}
+                maxLength={10}
               />
               <label>
-                <input type="checkbox" onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })} /> 
+                <input type="checkbox" onChange={e => setAddressForm({ ...addressForm, is_default: e.target.checked })} />
                 Set as default
               </label>
               <button onClick={addAddress} disabled={loading}>Save Address</button>
@@ -364,7 +366,7 @@ const Payment = () => {
 
           <h2>Order Summary</h2>
           {items.map(item => (
-            <div key={item.id} className="summary-item">
+            <div key={item.product_id || item.id} className="summary-item">
               <img src={item.main_image || item.image} alt={item.title} width="60" />
               <div><h4>{item.title}</h4><p>Qty: {item.quantity}</p><p>₹{item.price}</p></div>
               <span>₹{(item.price * item.quantity)}</span>
@@ -383,9 +385,9 @@ const Payment = () => {
               💵 Cash on Delivery
             </div>
           </div>
-          <button 
-            className="pay-btn" 
-            disabled={processingPayment} 
+          <button
+            className="pay-btn"
+            disabled={processingPayment}
             onClick={handleProceedToPayment}
           >
             {processingPayment ? "Processing..." : `Proceed to Pay ₹${total}`}

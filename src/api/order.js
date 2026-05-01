@@ -1,7 +1,6 @@
 import { api, initAuth } from "./Axios";
 
 export const orderService = {
-    // ⚠️ CRITICAL FIX: Remove duplicate /api prefix and add auth wait
     createOrder: async (data) => {
         try {
             await initAuth();
@@ -62,7 +61,6 @@ export const orderService = {
         }
     },
 
-    // ⚠️ CRITICAL ADD: Razorpay payment methods
     createRazorpayOrder: async (amount, currency = "INR") => {
         try {
             await initAuth();
@@ -83,7 +81,6 @@ export const orderService = {
     verifyPayment: async (paymentData) => {
         try {
             await initAuth();
-            // ⚠️ CRITICAL: Send payment_id, order_id, signature to backend for verification
             const response = await api.post("/payments/verify", paymentData);
             return { success: true, data: response.data };
         } catch (error) {
@@ -95,7 +92,6 @@ export const orderService = {
         }
     },
 
-    // Get order payment status
     getPaymentStatus: async (orderId) => {
         try {
             await initAuth();

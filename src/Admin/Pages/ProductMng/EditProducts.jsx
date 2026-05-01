@@ -25,25 +25,21 @@ const EditProduct = () => {
     second_image: "",
     third_image: "",
   });
-
-  // ⚠️ FIX: Check admin access
+ 
   useEffect(() => {
     if (!authLoading && !admin) {
       toast.error("Access denied. Admin only.");
       navigate("/");
     }
   }, [admin, authLoading, navigate]);
-
-  /* =====================
-     FETCH PRODUCT
-  ===================== */
+ 
   useEffect(() => {
     const fetchProduct = async () => {
       if (!admin) return;
       
       try {
         setLoading(true);
-        await initAuth(); // ⚠️ FIX: Wait for auth
+        await initAuth();  
         const res = await api.get(`/products/${id}`);
         setProduct(res.data);
         setInStock((res.data.stock > 0) || res.data.in_stock);

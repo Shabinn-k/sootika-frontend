@@ -1,10 +1,9 @@
 import { api, initAuth } from "./Axios";
 
 export const adminService = {
-  // Admin dashboard
   getDashboard: async () => {
     try {
-      await initAuth(); // ⚠️ CRITICAL FIX
+      await initAuth(); 
       const response = await api.get("/admin/dashboard");
       return { success: true, data: response.data };
     } catch (error) {
@@ -16,7 +15,6 @@ export const adminService = {
     }
   },
 
-  // Users
   getAllUsers: async () => {
     try {
       await initAuth();
@@ -53,7 +51,7 @@ export const adminService = {
   toggleUserBlock: async (id) => {
     try {
       await initAuth();
-      const response = await api.put(`/admin/users/${id}/toggle-block`);
+      const response = await api.put(`/admin/users/${id}/block`)
       return { success: true, data: response.data };
     } catch (error) {
       console.error("Toggle block error:", error);
@@ -72,7 +70,6 @@ export const adminService = {
     }
   },
 
-  // Stats
   getProductStats: async () => {
     try {
       await initAuth();
@@ -84,7 +81,6 @@ export const adminService = {
     }
   },
 
-  // Products Management
   createProduct: async (productData) => {
     try {
       await initAuth();
@@ -110,7 +106,6 @@ export const adminService = {
   updateProductImage: async (id, type, imageData) => {
     try {
       await initAuth();
-      // ⚠️ CRITICAL FIX: Let axios interceptor handle headers but don't override
       const response = await api.put(`/admin/products/${id}/image/${type}`, imageData, {
         headers: { 
           "Content-Type": "multipart/form-data" 
@@ -134,7 +129,6 @@ export const adminService = {
     }
   },
 
-  // Feedbacks
   getFeedbacks: async () => {
     try {
       await initAuth();

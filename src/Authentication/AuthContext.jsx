@@ -10,9 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
-  // Check auth on mount
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
@@ -76,67 +74,59 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setAdmin(null);
       toast.error("Session expired. Please login again.");
-      navigate("/");
     };
     window.addEventListener("unauthorized", handleUnauthorized);
     return () => window.removeEventListener("unauthorized", handleUnauthorized);
-  }, [navigate]);
+  }, []);
 
   const login = async (email, password) => {
-  try {
-    const res = await api.post("/auth/login", { 
-      email: email.trim(), 
-      password: password 
-    });
-    
-    console.log("Login success:", res.data);
-    
-    const { access_token, refresh_token, role, name } = res.data;
-    
-    if (!access_token) {
-      throw new Error("No token received");
+    try {
+      const res = await api.post("/auth/login", {
+        email: email.trim(),
+        password
+      });
+
+      const { access_token, refresh_token, role, name } = res.data;
+
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("refresh_token", refresh_token);
+      localStorage.setItem("role", role);
+
+      api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+      let userData = null;
+      let adminData = null;
+
+      if (role === "admin") {
+        adminData = { id: email, name: name || "Admin", email, role: "admin" };
+        setAdmin(adminData);
+        setUser(null);
+      } else {
+        userData = { id: email, name: name || "", email, role: "user" };
+        setUser(userData);
+        setAdmin(null);
+      }
+
+      return {
+        success: true,
+        role,
+        user: userData,
+        admin: adminData
+      };
+
+    } catch (err) {
+      return { success: false, error: err.response?.data?.error };
     }
-    
-    localStorage.setItem("token", access_token);
-    localStorage.setItem("refresh_token", refresh_token);
-    localStorage.setItem("role", role);
-    
-    if (role === "admin") {
-      const adminData = { id: email, name: name || "Admin", email: email, role: "admin" };
-      setAdmin(adminData);
-      setUser(null);
-      localStorage.setItem("admin", JSON.stringify(adminData));
-      localStorage.removeItem("user");
-      toast.success("Admin Login Successful!");
-      navigate("/admin/dashboard");
-    } else {
-      const userData = { id: email, name: name || "", email: email, role: "user" };
-      setUser(userData);
-      setAdmin(null);
-      localStorage.setItem("user", JSON.stringify(userData));
-      localStorage.removeItem("admin");
-      toast.success("Login Successful!");
-      setShowLogin(false); 
-      navigate("/");
-    }
-    return true;
-    
-  } catch (err) {
-    console.error("Login error:", err.response?.data);
-    toast.error(err.response?.data?.error || "Login failed");
-    return false;
-  }
-};
+  };
 
   const signup = async (userData) => {
     try {
       const response = await api.post("/auth/signup", {
         name: userData.name,
         email: userData.email,
-        phone: userData.phone || userData.number,
+        phone: userData.phone,
         password: userData.password
       });
-      
+
       toast.success("Signup successful! Please check your email for OTP.");
       return { success: true, email: userData.email };
     } catch (err) {
@@ -160,22 +150,21 @@ export const AuthProvider = ({ children }) => {
       setAdmin(null);
       delete api.defaults.headers.common["Authorization"];
       toast.info("Logged out");
-      navigate("/");
+      // navigate("/");
     }
   };
 
   return (
-    <AuthContext.Provider 
-      value={{ 
-        user, 
-        admin, 
+    <AuthContext.Provider
+      value={{
+        user,
+        admin,
         loading,
-        login, 
-        logoutUser, 
-        signup, 
-        setUser 
-      }}
-    >
+        login,
+        logoutUser,
+        signup,
+        setUser
+      }}>
       {children}
     </AuthContext.Provider>
   );

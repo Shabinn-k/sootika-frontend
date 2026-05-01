@@ -13,15 +13,23 @@ const OTPVerification = ({ email, onVerifySuccess, onCancel }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (timeLeft <= 0) {
-      setCanResend(true);
-      return;
-    }
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
+  if (timeLeft <= 0) {
+    setCanResend(true);
+    return;
+  }
+
+  const timer = setInterval(() => {
+    setTimeLeft((prev) => {
+      if (prev <= 1) {
+        clearInterval(timer);
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [timeLeft]);
 
   useEffect(() => {
     if (inputRefs.current[0]) {
@@ -72,6 +80,7 @@ const OTPVerification = ({ email, onVerifySuccess, onCancel }) => {
   };
 
   const handleVerify = async (e) => {
+    if (loading) return;
     e.preventDefault();
     const otpCode = otp.join("");
     
@@ -101,7 +110,7 @@ const OTPVerification = ({ email, onVerifySuccess, onCancel }) => {
   };
 
   const handleResend = async () => {
-    if (!canResend) return;
+    if (!canResend || loading) return;
     setLoading(true);
     try {
       await authService.resendOTP(email);

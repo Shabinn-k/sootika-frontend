@@ -7,15 +7,14 @@ import { toast } from "react-toastify";
 export const CartContext = createContext(null);
 
 const CartContextProvider = ({ children }) => {
-  const { user, loading: authLoading } = useAuth(); // ⚠️ ADD authLoading
+  const { user, loading: authLoading } = useAuth();
   const [cartItems, setCartItems] = useState([]);
   const [wishItems, setWishItems] = useState([]);
-  const [loading, setLoading] = useState(true); // ⚠️ ADD loading state
+  const [loading, setLoading] = useState(true);
 
-  // ⚠️ FIX: Only fetch when auth is ready AND user exists
   useEffect(() => {
     if (authLoading) return;
-    
+
     if (!user) {
       setCartItems([]);
       setWishItems([]);
@@ -28,13 +27,13 @@ const CartContextProvider = ({ children }) => {
       try {
         const cartRes = await cartService.getCart();
         const wishRes = await wishlistService.getWishlist();
-        
+
         const mappedCart = (cartRes.data || []).map(item => ({
           ...item,
           image: item.main_image || item.image,
           product_id: item.product_id || item.id
         }));
-        
+
         setCartItems(mappedCart);
         setWishItems(wishRes.data || []);
       } catch (err) {
@@ -49,12 +48,11 @@ const CartContextProvider = ({ children }) => {
     };
 
     fetchData();
-  }, [user, authLoading]); // ⚠️ ADD authLoading dependency
+  }, [user, authLoading]);
 
-  // ⚠️ ADD fetchCart function
   const fetchCart = async () => {
     if (!user || authLoading) return;
-    
+
     setLoading(true);
     try {
       const cartRes = await cartService.getCart();
@@ -78,8 +76,10 @@ const CartContextProvider = ({ children }) => {
     }
 
     try {
-      await cartService.addToCart({ product_id: item.id, quantity: item.quantity || 1 });
-      
+      await cartService.addToCart({
+        product_id: item.id,
+        quantity: item.quantity || 1
+      });
       setCartItems((prev) => {
         const exist = prev.find((p) => p.product_id === item.id || p.id === item.id);
         if (exist) {
@@ -89,15 +89,15 @@ const CartContextProvider = ({ children }) => {
               : p
           );
         } else {
-          return [...prev, { 
-            ...item, 
-            product_id: item.id, 
+          return [...prev, {
+            ...item,
+            product_id: item.id,
             quantity: item.quantity || 1,
             image: item.main_image || item.image
           }];
         }
       });
-      
+
       toast.success("Cart updated");
     } catch (err) {
       toast.error("Failed to add to cart");
@@ -107,7 +107,7 @@ const CartContextProvider = ({ children }) => {
   const removeCart = async (id) => {
     try {
       await cartService.removeFromCart(id);
-      setCartItems((prev) => prev.filter((item) => item.product_id !== id && item.id !== id));
+      setCartItems(prev => prev.filter(item => item.product_id !== id));
       toast.info("Item removed from cart");
     } catch (err) {
       toast.error("Failed to remove from cart");
@@ -142,7 +142,11 @@ const CartContextProvider = ({ children }) => {
   const removeWish = async (id) => {
     try {
       await wishlistService.removeFromWishlist(id);
-      setWishItems((prev) => prev.filter((item) => item.product_id !== id && item.id !== id));
+      setWishItems((prev) => {
+        const exists = prev.find(p => p.id === item.id);
+        if (exists) return prev;
+        return [...prev, item];
+      });
       toast.info("Removed from wishlist");
     } catch (err) {
       toast.error("Failed to remove from wishlist");
@@ -159,8 +163,8 @@ const CartContextProvider = ({ children }) => {
         wishItems,
         addToWish,
         removeWish,
-        loading,      // ⚠️ ADD loading
-        fetchCart,    // ⚠️ ADD fetchCart
+        loading,
+        fetchCart,
       }}
     >
       {children}

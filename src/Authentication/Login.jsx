@@ -17,20 +17,27 @@ const Login = ({ setShowLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    
+
     if (!agree) {
       toast.warn("Please agree to the terms of use & privacy policy");
       return;
     }
 
     setLoading(true);
-    const success = await login(email, password);
+    const res = await login(email, password);
     setLoading(false);
 
-    if (success === true) {
+    if (res.success) {
+      toast.success("Welcome back!");
       setShowLogin(false);
+
+      if (res.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
+      }
     } else {
-      setError("Invalid email or password");
+      setError(res.error || "Invalid email or password");
     }
   };
 
@@ -68,7 +75,7 @@ const Login = ({ setShowLogin }) => {
 
         {error && <div className="error-message">{error}</div>}
 
-        <button type="submit" disabled={loading || !agree}>
+        <button type="submit" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
         </button>
 
@@ -78,7 +85,6 @@ const Login = ({ setShowLogin }) => {
             id="agreeTerms"
             checked={agree}
             onChange={(e) => setAgree(e.target.checked)}
-            required
           />
           <label htmlFor="agreeTerms">
             By continuing, I agree to the terms of use & privacy policy.

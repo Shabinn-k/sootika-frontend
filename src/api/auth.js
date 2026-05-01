@@ -17,7 +17,7 @@ export const authService = {
 
   verifyOTP: async (data) => {
     try {
-      const response = await api.post("/auth/check", data);
+      const response = await api.post("/auth/verify", data)
       return { success: true, data: response.data };
     } catch (error) {
       return { success: false, error: error.response?.data?.error || "OTP verification failed" };
